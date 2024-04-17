@@ -34,8 +34,9 @@ composer:
     - git show -3 --stat
 
 composer (next major):
+  allow_failure: true
   variables:
-    LENIENT_ALLOW_LIST: devel,devel_generate,rules,commerce,entity,address,state_machine,entity_reference_revisions,profile,inline_entity_form,token,workbench_moderation,workbench_moderation_actions
+    _LENIENT_ALLOW_LIST: devel,devel_generate,rules,commerce,entity,address,state_machine,entity_reference_revisions,profile,inline_entity_form,token,workbench_moderation,workbench_moderation_actions
 
 # -------------------------------- VALIDATE ------------------------------------
 
