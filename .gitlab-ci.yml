@@ -127,18 +127,20 @@ phpunit:
     - |
       printf "_MATRIX_VALUE               = %s\n" $_MATRIX_VALUE &&
       printf "_PHPUNIT_CONCURRENT         = %s\n" $_PHPUNIT_CONCURRENT &&
-      printf "_PHPUNIT_TESTGROUPS         = %s\n" $_PHPUNIT_TESTGROUPS &&
-      printf "_PHPUNIT_EXTRA              = %s\n" $_PHPUNIT_EXTRA &&
+      printf "_PHPUNIT_TESTGROUPS         = %s\n" "$_PHPUNIT_TESTGROUPS" &&
+      printf "_PHPUNIT_EXTRA              = %s\n" "$_PHPUNIT_EXTRA" &&
       printf "SYMFONY_DEPRECATIONS_HELPER = %s\n" $SYMFONY_DEPRECATIONS_HELPER
     - |
-      if [[ "$_PHPUNIT_CONCURRENT" == "0" ]]; then
-        # Specify parameters that will be passed to PHPUNIT (needs --group)
-        export _PHPUNIT_EXTRA="$_PHPUNIT_EXTRA --group $_MATRIX_VALUE"
-      else
-        # Specify parameters that will be passed to RUN-TESTS.SH (without --group)
-        export _PHPUNIT_EXTRA="$_PHPUNIT_EXTRA $_MATRIX_VALUE"
-        # Ensure the value is 1 if it is not 0.
-        export _PHPUNIT_CONCURRENT=1
+      if [[ "$_MATRIX_VALUE" != "" ]]; then
+        if [[ "$_PHPUNIT_CONCURRENT" == "0" ]]; then
+          # Specify parameters that will be passed to PHPUNIT (needs --group)
+          export _PHPUNIT_EXTRA="$_PHPUNIT_EXTRA --group $_MATRIX_VALUE"
+        else
+          # Specify parameters that will be passed to RUN-TESTS.SH (without --group)
+          export _PHPUNIT_EXTRA="$_PHPUNIT_EXTRA $_MATRIX_VALUE"
+          # Ensure the value is 1 if it is not 0.
+          export _PHPUNIT_CONCURRENT=1
+        fi
       fi
     - echo "End of before_script _PHPUNIT_CONCURRENT=$_PHPUNIT_CONCURRENT _PHPUNIT_EXTRA=$_PHPUNIT_EXTRA"
 
