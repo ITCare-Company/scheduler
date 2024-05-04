@@ -103,7 +103,9 @@ class SchedulerManager {
     EventDispatcherInterface $eventDispatcher,
     TimeInterface $time,
     EntityFieldManagerInterface $entityFieldManager,
-    SchedulerPluginManager $pluginManager,
+    // Trailing comma is incompatible with PHPUnit 9.6.19 in Drupal 9.5 PHP 7.4.
+    // phpcs:ignore Drupal.Functions.MultiLineFunctionDeclaration.MissingTrailingComma
+    SchedulerPluginManager $pluginManager
   ) {
     $this->dateFormatter = $dateFormatter;
     $this->logger = $logger;
