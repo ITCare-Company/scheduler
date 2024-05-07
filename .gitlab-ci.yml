@@ -52,6 +52,9 @@ variables:
 
 .composer-base:
   after_script:
+    # Delete the .eslintignore file, it is only required for DrupalCI
+    # @todo remove the file and this delete when no longer running DrupalCI
+    - rm $CI_PROJECT_DIR/$_WEB_ROOT/modules/custom/$CI_PROJECT_NAME/.eslintignore || true
     # Show the last two commits. Current directory /builds/project/scheduler ($CI_PROJECT_DIR) is correct.
     - git show -2 --stat --oneline
     - *show-variables
@@ -87,6 +90,10 @@ composer (next major):
 
 eslint:
   allow_failure: false
+  after_script:
+    - cd $CI_PROJECT_DIR/$_WEB_ROOT/modules/custom/$CI_PROJECT_NAME
+    - test -f .eslintignore && echo "===  This is .eslintignore  ===" && cat .eslintignore || true
+    - test -f .prettierignore && echo "=== This is .prettierignore ===" && cat .prettierignore || true
 
 stylelint:
   allow_failure: false
