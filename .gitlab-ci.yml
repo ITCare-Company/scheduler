@@ -16,11 +16,11 @@ include:
 ################
 variables:
   OPT_IN_TEST_CURRENT: 1
+  OPT_IN_TEST_MAX_PHP: 1
   OPT_IN_TEST_NEXT_MINOR: 1
   OPT_IN_TEST_NEXT_MAJOR: 1
   OPT_IN_TEST_PREVIOUS_MINOR: 1
   OPT_IN_TEST_PREVIOUS_MAJOR: 1
-  OPT_IN_TEST_MAX_PHP: 1
 
   _SHOW_ENVIRONMENT_VARIABLES: 1
   _PHPUNIT_CONCURRENT: 1
@@ -60,13 +60,13 @@ variables:
     - *show-variables
 
 composer (max PHP version):
+  # Using when: manual needs 'allow failure: true' otherwise the overall pipeline status shows 'blocked'
   rules:
     - !reference [ .opt-in-max-php-rule ]
     - when: manual
   allow_failure: true
 
 composer (previous minor):
-  # Using when: manual needs 'allow failure: true' otherwise the overall pipeline status shows 'blocked'
   rules:
     - !reference [ .opt-in-previous-minor-rule ]
     - when: manual
@@ -161,13 +161,34 @@ phpunit:
       fi
     - echo "End of before_script _PHPUNIT_CONCURRENT=$_PHPUNIT_CONCURRENT _PHPUNIT_EXTRA=$_PHPUNIT_EXTRA"
 
+# Do not automatically run all variants of PHPUnit, but allow the jobs to be
+# started manually. To do this the .phpunit-tests-exist-rule has to be removed.
+phpunit (max PHP version):
+  allow_failure: true
+  rules:
+    - !reference [ .opt-in-max-php-rule ]
+    - !reference [ .skip-phpunit-rule ]
+    - when: manual
+
+phpunit (previous minor):
+  allow_failure: true
+  rules:
+    - !reference [ .opt-in-previous-minor-rule ]
+    - !reference [ .skip-phpunit-rule ]
+    - when: manual
+
+phpunit (previous major):
+  allow_failure: true
+  rules:
+    - !reference [ .opt-in-previous-major-rule ]
+    - !reference [ .skip-phpunit-rule ]
+    - when: manual
+
 phpunit (next minor):
   allow_failure: true
   rules:
     - !reference [ .opt-in-next-minor-rule ]
     - !reference [ .skip-phpunit-rule ]
-    # Do not automatically run, but allow the job to be started manually.
-    # To do this the .phpunit-tests-exist-rule has to be removed.
     - when: manual
   variables:
     # Use core ignoreFile to show deprecations. This is only used when $_PHPUNIT_CONCURRENT=1 so make sure that is also set.
