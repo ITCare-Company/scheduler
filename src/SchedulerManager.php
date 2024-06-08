@@ -910,6 +910,7 @@ class SchedulerManager {
    *   Array of loaded entity objects, keyed by id.
    */
   protected function loadEntities(array $ids, string $type) {
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
     $storage = $this->entityTypeManager->getStorage($type);
     $entities = [];
     foreach ($ids as $id) {
