@@ -1103,10 +1103,8 @@ display:
             restrict_roles: false
             roles: {  }
           break_phrase: false
-          not: false
           entity_type: node
           entity_field: uid
-          plugin_id: numeric
       empty:
         area_text_custom:
           id: area_text_custom
