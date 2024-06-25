@@ -23,16 +23,23 @@ class SchedulerJavascriptVerticalTabsTest extends SchedulerJavascriptTestBase {
     $this->entityTypeObject($entityTypeId)
       ->setThirdPartySetting('scheduler', 'fields_display_mode', 'vertical_tab')
       ->setThirdPartySetting('scheduler', 'expand_fieldset', 'always')->save();
+    $titleField = $this->titleField($entityTypeId);
 
     // Create an entity with a scheduled publishing date.
-    $entity = $this->createEntity($entityTypeId, $bundle, ['publish_on' => strtotime('+2 months')]);
+    $entity = $this->createEntity($entityTypeId, $bundle, [
+      'publish_on' => strtotime('+2 months'),
+      "$titleField" => "$entityTypeId to publish",
+    ]);
     $this->drupalGet($entity->toUrl('edit-form'));
     $assert->pageTextContains('Scheduled for publishing');
     $assert->pageTextNotContains('Scheduled for unpublishing');
     $assert->pageTextNotContains('Not scheduled');
 
     // Create an entity with a scheduled unpublishing date.
-    $entity = $this->createEntity($entityTypeId, $bundle, ['unpublish_on' => strtotime('+3 months')]);
+    $entity = $this->createEntity($entityTypeId, $bundle, [
+      'unpublish_on' => strtotime('+3 months'),
+      "$titleField" => "$entityTypeId to unpublish",
+    ]);
     $this->drupalGet($entity->toUrl('edit-form'));
     $assert->pageTextNotContains('Scheduled for publishing');
     $assert->pageTextContains('Scheduled for unpublishing');
@@ -42,8 +49,11 @@ class SchedulerJavascriptVerticalTabsTest extends SchedulerJavascriptTestBase {
     // always open. Taxonomy Term does not have vertical tabs, only the separate
     // fieldset, but this also shows the summary. Media has the old-style block
     // with side tabs, so we need to click 'Scheduling options'.
+    // In Drupal 10.3 the form for editing Taxonomy Terms seemed to change, and
+    // vertical tabs are implemented in a different way to 10.2. We now need to
+    // click to bring focus on that tab, ready for filling the date fields.
     $page = $this->getSession()->getPage();
-    if ($entityTypeId == 'media') {
+    if ($entityTypeId == 'media' || ($entityTypeId == 'taxonomy_term' && version_compare(\Drupal::VERSION, '10.3', '>='))) {
       $page->clickLink('Scheduling options');
     }
 
