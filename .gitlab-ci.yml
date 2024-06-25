@@ -106,22 +106,10 @@ phpstan:
     - test -f phpstan.neon && echo "=== This is phpstan.neon ===" && cat phpstan.neon
     - php $CI_PROJECT_DIR/scripts/phpstan-baseline-summary.php phpstan-baseline-to-fix.neon
 
-# Do not automatically run, but allow the jobs to be started manually.
-phpstan (max PHP version):
-  rules:
-    - !reference [ .opt-in-max-php-rule ]
-    - !reference [ .skip-phpstan-rule ]
-    - when: manual
-
+# Do not automatically run 'next minor', but allow it to be started manually.
 phpstan (next minor):
   rules:
     - !reference [ .opt-in-next-minor-rule ]
-    - !reference [ .skip-phpstan-rule ]
-    - when: manual
-
-phpstan (next major):
-  rules:
-    - !reference [ .opt-in-next-major-rule ]
     - !reference [ .skip-phpstan-rule ]
     - when: manual
 
@@ -161,29 +149,9 @@ phpunit:
       fi
     - echo "End of before_script _PHPUNIT_CONCURRENT=$_PHPUNIT_CONCURRENT _PHPUNIT_EXTRA=$_PHPUNIT_EXTRA"
 
-# Do not automatically run all variants of PHPUnit, but allow the jobs to be
-# started manually. To do this the .phpunit-tests-exist-rule has to be removed.
-phpunit (max PHP version):
-  allow_failure: true
-  rules:
-    - !reference [ .opt-in-max-php-rule ]
-    - !reference [ .skip-phpunit-rule ]
-    - when: manual
-
-phpunit (previous minor):
-  allow_failure: true
-  rules:
-    - !reference [ .opt-in-previous-minor-rule ]
-    - !reference [ .skip-phpunit-rule ]
-    - when: manual
-
-phpunit (previous major):
-  allow_failure: true
-  rules:
-    - !reference [ .opt-in-previous-major-rule ]
-    - !reference [ .skip-phpunit-rule ]
-    - when: manual
-
+# Do not automatically run 'next minor' PHPUnit but allow it to be started
+# manually. To do this the .phpunit-tests-exist-rule has to be removed.
+# The other variants all have 'manual' on the Composer job instead.
 phpunit (next minor):
   allow_failure: true
   rules:
@@ -196,10 +164,6 @@ phpunit (next minor):
     SYMFONY_DEPRECATIONS_HELPER: "ignoreFile=$CI_PROJECT_DIR/$_WEB_ROOT/core/.deprecation-ignore.txt"
 
 phpunit (next major):
-  rules:
-    - !reference [ .opt-in-next-major-rule ]
-    - !reference [ .skip-phpunit-rule ]
-    - when: manual
   variables:
     # Use core ignoreFile to show deprecations. This is only used when $_PHPUNIT_CONCURRENT=1 so make sure that is also set.
     _PHPUNIT_CONCURRENT: 1
