@@ -58,6 +58,8 @@ variables:
     # Show the last two commits. Current directory /builds/project/scheduler ($CI_PROJECT_DIR) is correct.
     - git show -2 --stat --oneline
     - *show-variables
+    - cat composer.json
+    - composer show | awk '$0 ~ /rules|commerce|inline_entity_form|workbench|drush|devel_generate/ {print $1 "\t " $2}'
 
 composer (max PHP version):
   # Using when: manual needs 'allow failure: true' otherwise the overall pipeline status shows 'blocked'
@@ -79,12 +81,15 @@ composer (previous major):
   allow_failure: true
 
 composer (next major):
-  allow_failure: true
   rules:
     - !reference [ .opt-in-next-major-rule ]
     - when: manual
-  variables:
-    _LENIENT_ALLOW_LIST: devel,devel_generate,rules,commerce,entity,address,state_machine,entity_reference_revisions,profile,inline_entity_form,token,workbench_moderation,workbench_moderation_actions
+  allow_failure: true
+  before_script:
+    # Swap in a different composer file for Next Major. This loads dev versions or merge-request branches of several
+    # third-party modules which are required for testing, but which do not have Drupal 11 release yet.
+    - rm composer.json
+    - mv composer_next_major.json composer.json
 
 # -------------------------------- VALIDATE ------------------------------------
 
