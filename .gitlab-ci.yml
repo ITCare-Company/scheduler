@@ -77,20 +77,24 @@ composer (previous minor):
   allow_failure: true
 
 # For merge requests always run Next Major and Previous Major automatically.
-# For all other types of pipeline allow them to be run manually.
+# For all other types of pipeline allow them to be run manually). This needs
+# 'allow_failure: true' otherwise the pipeline status is 'blocked' and the
+# stages show 'running' without ever appearing to finish.
 composer (previous major):
   rules:
     - !reference [ .opt-in-previous-major-rule ]
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: on_success
-    - when: manual
+    - if: $CI_PIPELINE_SOURCE != "merge_request_event"
+      when: manual
+      allow_failure: true
+    - when: on_success
 
 composer (next major):
   rules:
     - !reference [ .opt-in-next-major-rule ]
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: on_success
-    - when: manual
+    - if: $CI_PIPELINE_SOURCE != "merge_request_event"
+      when: manual
+      allow_failure: true
+    - when: on_success
   before_script:
     # Swap in a different composer file for Next Major. This loads dev versions or merge-request branches of several
     # third-party modules which are required for testing, but which do not have Drupal 11 release yet.
