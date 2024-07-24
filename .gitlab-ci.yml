@@ -84,7 +84,6 @@ composer (previous major):
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: on_success
     - when: manual
-  allow_failure: true
 
 composer (next major):
   rules:
@@ -92,7 +91,6 @@ composer (next major):
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: on_success
     - when: manual
-  allow_failure: true
   before_script:
     # Swap in a different composer file for Next Major. This loads dev versions or merge-request branches of several
     # third-party modules which are required for testing, but which do not have Drupal 11 release yet.
@@ -164,9 +162,7 @@ phpunit:
 
 # Do not automatically run 'next minor' PHPUnit but allow it to be started
 # manually. To do this the .phpunit-tests-exist-rule has to be removed.
-# The other variants all have 'manual' on the Composer job instead.
 phpunit (next minor):
-  allow_failure: true
   rules:
     - !reference [ .opt-in-next-minor-rule ]
     - !reference [ .skip-phpunit-rule ]
