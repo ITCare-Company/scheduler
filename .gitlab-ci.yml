@@ -61,6 +61,7 @@ variables:
     - cat composer.json
     - composer show | awk '$0 ~ /rules|commerce|inline_entity_form|workbench|drush|devel_generate/ {print $1 "\t " $2}'
     - composer show | awk '$0 ~ /rules|commerce|inline_entity_form|workbench|drush|devel_generate/ {print $0}'
+    - composer show | grep -E '(rules|commerce|inline_entity_form|workbench|drush|devel_generate)'
 
 composer (max PHP version):
   # Using when: manual needs 'allow failure: true' otherwise the overall pipeline status shows 'blocked'
@@ -75,18 +76,22 @@ composer (previous minor):
     - when: manual
   allow_failure: true
 
+# For merge requests always run Next Major and Previous Major automatically.
+# For all other types of pipeline allow them to be run manually.
 composer (previous major):
   rules:
     - !reference [ .opt-in-previous-major-rule ]
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: on_success
     - when: manual
   allow_failure: true
 
 composer (next major):
   rules:
     - !reference [ .opt-in-next-major-rule ]
-    - if: $CI_PIPELINE_SOURCE == "schedule"
-      when: manual
-    - when: on_success
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: on_success
+    - when: manual
   allow_failure: true
   before_script:
     # Swap in a different composer file for Next Major. This loads dev versions or merge-request branches of several
