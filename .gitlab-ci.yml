@@ -17,10 +17,10 @@ include:
 variables:
   OPT_IN_TEST_CURRENT: 1
   OPT_IN_TEST_MAX_PHP: 1
-  OPT_IN_TEST_NEXT_MINOR: 1
-  OPT_IN_TEST_NEXT_MAJOR: 1
   OPT_IN_TEST_PREVIOUS_MINOR: 1
   OPT_IN_TEST_PREVIOUS_MAJOR: 1
+  OPT_IN_TEST_NEXT_MINOR: 1
+  OPT_IN_TEST_NEXT_MAJOR: 1
 
   _SHOW_ENVIRONMENT_VARIABLES: 1
   _PHPUNIT_CONCURRENT: 1
@@ -64,22 +64,24 @@ variables:
     - composer show | grep -E '(rules|commerce|inline_entity_form|workbench|drush|devel_generate)'
 
 composer (max PHP version):
-  # Using when: manual needs 'allow failure: true' otherwise the overall pipeline status shows 'blocked'
+  # Using 'when: manual' needs 'allow failure: true' otherwise the overall pipeline status
+  # is shown as 'blocked' and the stages show 'running' without ever appearing to finish.
   rules:
     - !reference [ .opt-in-max-php-rule ]
     - when: manual
   allow_failure: true
 
+# For merge requests always run Previous and Next Minor and Major automatically.
+# For all other types of pipeline allow these to be run manually.
 composer (previous minor):
   rules:
     - !reference [ .opt-in-previous-minor-rule ]
-    - when: manual
+    - if: $CI_PIPELINE_SOURCE != "merge_request_event"
+      when: manual
+      allow_failure: true
+    - when: on_success
   allow_failure: true
 
-# For merge requests always run Next Major and Previous Major automatically.
-# For all other types of pipeline allow these to be run manually. This needs
-# 'allow_failure: true' otherwise the pipeline status is 'blocked' and the
-# stages show 'running' without ever appearing to finish.
 composer (previous major):
   rules:
     - !reference [ .opt-in-previous-major-rule ]
@@ -87,6 +89,15 @@ composer (previous major):
       when: manual
       allow_failure: true
     - when: on_success
+
+composer (next minor):
+  rules:
+    - !reference [ .opt-in-next-minor-rule ]
+    - if: $CI_PIPELINE_SOURCE != "merge_request_event"
+      when: manual
+      allow_failure: true
+    - when: on_success
+  allow_failure: true
 
 composer (next major):
   rules:
@@ -164,13 +175,7 @@ phpunit:
       fi
     - echo "End of before_script _PHPUNIT_CONCURRENT=$_PHPUNIT_CONCURRENT _PHPUNIT_EXTRA=$_PHPUNIT_EXTRA"
 
-# Do not automatically run 'next minor' PHPUnit but allow it to be started
-# manually. To do this the .phpunit-tests-exist-rule has to be removed.
 phpunit (next minor):
-  rules:
-    - !reference [ .opt-in-next-minor-rule ]
-    - !reference [ .skip-phpunit-rule ]
-    - when: manual
   variables:
     # Use core ignoreFile to show deprecations. This is only used when $_PHPUNIT_CONCURRENT=1 so make sure that is also set.
     _PHPUNIT_CONCURRENT: 1
