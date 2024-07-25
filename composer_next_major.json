@@ -10,13 +10,10 @@
         "drupal/devel_generate": ">=4",
         "drupal/workbench_moderation": "dev-3455329-automated-drupal-11",
         "drupal/workbench_moderation_actions": "dev-3435732-automated-drupal-11",
-        "drupal/commerce": "dev-3462426-drupal-11-compatibility"
+        "drupal/commerce": "^2 || ^3",
+        "drupal/inline_entity_form": "dev-3438428-automated-drupal-11 as 3.1.0"
     },
     "repositories": {
-        "commerce": {
-            "type": "vcs",
-            "url": "https://git.drupalcode.org/issue/commerce-3462426.git"
-        },
         "inline_entity_form": {
             "type": "vcs",
             "url": "https://git.drupalcode.org/issue/inline_entity_form-3438428.git"

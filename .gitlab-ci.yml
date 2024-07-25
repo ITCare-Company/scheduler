@@ -77,7 +77,7 @@ composer (previous minor):
   allow_failure: true
 
 # For merge requests always run Next Major and Previous Major automatically.
-# For all other types of pipeline allow them to be run manually). This needs
+# For all other types of pipeline allow these to be run manually. This needs
 # 'allow_failure: true' otherwise the pipeline status is 'blocked' and the
 # stages show 'running' without ever appearing to finish.
 composer (previous major):
