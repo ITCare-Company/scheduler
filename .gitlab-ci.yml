@@ -60,7 +60,6 @@ variables:
     - *show-variables
     - cat composer.json
     - composer show | awk '$0 ~ /rules|commerce|inline_entity_form|workbench|drush|devel_generate/ {print $1 "\t " $2}'
-    - composer show | awk '$0 ~ /rules|commerce|inline_entity_form|workbench|drush|devel_generate/ {print $0}'
     - composer show | grep -E '(rules|commerce|inline_entity_form|workbench|drush|devel_generate)'
 
 composer (max PHP version):
@@ -131,13 +130,6 @@ phpstan:
   after_script:
     - test -f phpstan.neon && echo "=== This is phpstan.neon ===" && cat phpstan.neon
     - php $CI_PROJECT_DIR/scripts/phpstan-baseline-summary.php phpstan-baseline-to-fix.neon
-
-# Do not automatically run 'next minor', but allow it to be started manually.
-phpstan (next minor):
-  rules:
-    - !reference [ .opt-in-next-minor-rule ]
-    - !reference [ .skip-phpstan-rule ]
-    - when: manual
 
 # -------------------------------- TEST ----------------------------------------
 
