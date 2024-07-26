@@ -21,6 +21,7 @@ variables:
   OPT_IN_TEST_PREVIOUS_MAJOR: 1
   OPT_IN_TEST_NEXT_MINOR: 1
   OPT_IN_TEST_NEXT_MAJOR: 1
+  OPT_IN_TEST_DRUPAL8: 1
 
   _SHOW_ENVIRONMENT_VARIABLES: 1
   _PHPUNIT_CONCURRENT: 1
@@ -50,6 +51,20 @@ variables:
 
 # -------------------------------- BUILD ---------------------------------------
 
+.opt-in-drupal8-rule: &opt-in-drupal8-rule
+  if: '$OPT_IN_TEST_DRUPAL8 != "1"'
+  when: never
+
+# Re-usable rule for running the job automatically on Merge Requests and allowing it
+# to manually triggered for all other types of pipeline.
+# Using 'when: manual' needs 'allow failure: true' otherwise the overall pipeline status
+# is shown as 'blocked' and the stages show 'running' without ever appearing to finish.
+.manual-if-not-mr-rule: &manual-if-not-mr-rule
+  - if: $CI_PIPELINE_SOURCE != "merge_request_event"
+    when: manual
+    allow_failure: true
+  - when: on_success
+
 .composer-base:
   after_script:
     # Delete the .eslintignore file, it is only required for DrupalCI
@@ -63,53 +78,47 @@ variables:
     - composer show | grep -E '(rules|commerce|inline_entity_form|workbench|drush|devel_generate)'
 
 composer (max PHP version):
-  # Using 'when: manual' needs 'allow failure: true' otherwise the overall pipeline status
-  # is shown as 'blocked' and the stages show 'running' without ever appearing to finish.
   rules:
     - !reference [ .opt-in-max-php-rule ]
     - when: manual
-  allow_failure: true
+      allow_failure: true
 
-# For merge requests always run Previous and Next Minor and Major automatically.
-# For all other types of pipeline allow these to be run manually.
 composer (previous minor):
   rules:
     - !reference [ .opt-in-previous-minor-rule ]
-    - if: $CI_PIPELINE_SOURCE != "merge_request_event"
-      when: manual
+    - when: manual
       allow_failure: true
-    - when: on_success
-  allow_failure: true
 
 composer (previous major):
   rules:
     - !reference [ .opt-in-previous-major-rule ]
-    - if: $CI_PIPELINE_SOURCE != "merge_request_event"
-      when: manual
-      allow_failure: true
-    - when: on_success
+    - *manual-if-not-mr-rule
 
 composer (next minor):
   rules:
     - !reference [ .opt-in-next-minor-rule ]
-    - if: $CI_PIPELINE_SOURCE != "merge_request_event"
-      when: manual
+    - when: manual
       allow_failure: true
-    - when: on_success
-  allow_failure: true
 
 composer (next major):
   rules:
     - !reference [ .opt-in-next-major-rule ]
-    - if: $CI_PIPELINE_SOURCE != "merge_request_event"
-      when: manual
-      allow_failure: true
-    - when: on_success
+    - *manual-if-not-mr-rule
   before_script:
     # Swap in a different composer file for Next Major. This loads dev versions or merge-request branches of several
     # third-party modules which are required for testing, but which do not have Drupal 11 release yet.
     - rm composer.json
     - mv composer_next_major.json composer.json
+
+composer (drupal 8):
+  extends: .composer-base
+  rules:
+    - *opt-in-drupal8-rule
+    - when: manual
+  allow_failure: true
+  variables:
+    PHP_VERSION: 7.4
+    DRUPAL_CORE: 8.9.20
 
 # -------------------------------- VALIDATE ------------------------------------
 
@@ -178,3 +187,13 @@ phpunit (next major):
     # Use core ignoreFile to show deprecations. This is only used when $_PHPUNIT_CONCURRENT=1 so make sure that is also set.
     _PHPUNIT_CONCURRENT: 1
     SYMFONY_DEPRECATIONS_HELPER: "ignoreFile=$CI_PROJECT_DIR/$_WEB_ROOT/core/.deprecation-ignore.txt"
+
+phpunit (drupal 8):
+  extends: phpunit
+  rules:
+    - *opt-in-drupal8-rule
+    - !reference [ .skip-phpunit-rule ]
+    - !reference [ .phpunit-tests-exist-rule ]
+    - when: on_success
+  needs:
+    - "composer (drupal 8)"
