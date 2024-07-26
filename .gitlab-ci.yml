@@ -22,7 +22,7 @@ variables:
   OPT_IN_TEST_NEXT_MINOR: 1
   OPT_IN_TEST_NEXT_MAJOR: 1
   OPT_IN_TEST_DRUPAL8: 1
-
+  RUN_JOB_UPGRADE_STATUS: 1
   _SHOW_ENVIRONMENT_VARIABLES: 1
   _PHPUNIT_CONCURRENT: 1
   _PHPUNIT_TESTGROUPS: ''
@@ -197,3 +197,9 @@ phpunit (drupal 8):
     - when: on_success
   needs:
     - "composer (drupal 8)"
+
+upgrade status:
+  rules:
+    - !reference [ .skip-upgrade-status-rule ]
+    - when: manual
+      allow_failure: true
