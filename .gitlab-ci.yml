@@ -74,8 +74,8 @@ variables:
     - git show -2 --stat --oneline
     - *show-variables
     - cat composer.json
-    - composer show | awk '$0 ~ /rules|commerce|inline_entity_form|workbench|drush|devel_generate/ {print $1 "\t " $2}'
-    - composer show | grep -E '(rules|commerce|inline_entity_form|workbench|drush|devel_generate)'
+    # Show version of some dependency modules that may vary
+    - composer show | grep -E '(rules|commerce|entity|inline_entity_form|workbench|drush|devel_generate)'
 
 composer (max PHP version):
   rules:
@@ -109,6 +109,9 @@ composer (next major):
     # third-party modules which are required for testing, but which do not have Drupal 11 release yet.
     - rm composer.json
     - mv composer_next_major.json composer.json
+  after_script:
+    - !reference [.composer-base, after_script]
+    - composer show drupal/entity
 
 composer (drupal 8):
   extends: .composer-base
