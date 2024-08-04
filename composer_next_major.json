@@ -5,7 +5,7 @@
     "license": "GPL-2.0-or-later",
     "homepage": "https://drupal.org/project/scheduler",
     "require-dev": {
-        "drupal/rules": "^4@dev",
+        "drupal/rules": "dev-3465805-add-array-return",
         "drush/drush": ">=9",
         "drupal/devel_generate": ">=4",
         "drupal/workbench_moderation": "dev-3455329-automated-drupal-11",
@@ -15,6 +15,10 @@
         "drupal/inline_entity_form": "dev-3438428-automated-drupal-11 as 3.1.0"
     },
     "repositories": {
+        "rules": {
+            "type": "vcs",
+            "url": "https://git.drupalcode.org/issue/rules-3465805.git"
+        },
         "entity": {
             "type": "vcs",
             "url": "https://git.drupalcode.org/issue/entity-3465393.git"
