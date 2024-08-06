@@ -177,6 +177,9 @@ phpunit:
           export _PHPUNIT_CONCURRENT=1
         fi
       fi
+    # Patch to disable strict config schema validation on older versions of core.
+    # See https://www.drupal.org/project/scheduler/issues/3451750
+    - if [[ $DRUPAL_CORE =~ ^(8.9|9.5|10.2) ]]; then patch -p1 --verbose < tests/fixtures/3451750-strict-config-schema.patch; fi
     - echo "End of before_script _PHPUNIT_CONCURRENT=$_PHPUNIT_CONCURRENT _PHPUNIT_EXTRA=$_PHPUNIT_EXTRA"
 
 phpunit (next minor):
