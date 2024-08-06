@@ -67,15 +67,17 @@ variables:
 
 .composer-base:
   after_script:
+    - !reference [ .create-environment-variables ]
     # Delete the .eslintignore file, it is only required for DrupalCI
     # @todo remove the file and this delete when no longer running DrupalCI
     - rm $CI_PROJECT_DIR/$_WEB_ROOT/modules/custom/$CI_PROJECT_NAME/.eslintignore || true
     # Show the last two commits. Current directory /builds/project/scheduler ($CI_PROJECT_DIR) is correct.
     - git show -2 --stat --oneline
     - *show-variables
-    - cat composer.json
-    # Show version of some dependency modules that may vary
-    - composer show | grep -E '(rules|commerce|entity|inline_entity_form|workbench|drush|devel_generate)'
+    # - cat composer.json
+    # Show version of some dependency modules that may vary.
+    # COLUMNS=100 only shows the name, 120 shows the versions, 130 includes the descriptions.
+    - COLUMNS=120 composer show | grep -E '(rules|commerce|entity|inline_entity_form|workbench|drush|devel_generate)'
 
 composer (max PHP version):
   rules:
@@ -109,9 +111,6 @@ composer (next major):
     # third-party modules which are required for testing, but which do not have Drupal 11 release yet.
     - rm composer.json
     - mv composer_next_major.json composer.json
-  after_script:
-    - !reference [.composer-base, after_script]
-    - composer show drupal/entity
 
 composer (drupal 8):
   extends: .composer-base
@@ -158,6 +157,7 @@ phpunit:
         - scheduler_kernel
         - scheduler_rules_integration
   before_script:
+    # If any variation also needs a before_script then add - !reference [phpunit, before_script] to include this script.
     - *show-variables
     - |
       printf "_MATRIX_VALUE               = %s\n" $_MATRIX_VALUE &&
