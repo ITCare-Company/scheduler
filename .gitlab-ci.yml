@@ -76,9 +76,7 @@ variables:
     - git show -2 --stat --oneline
     - *show-variables
     # - cat composer.json
-    # Show version of some dependency modules that may vary.
-    # COLUMNS=100 only shows the name, 120 shows the versions, 130 includes the descriptions.
-    - COLUMNS=120 composer show | grep -E '(rules|commerce|entity|inline_entity_form|workbench|drush|devel_generate)'
+    - COLUMNS=120 composer show | grep -E '\/(core |rules|commerce|entity|inline_entity_form|workbench|drush|devel_generate)'
 
 composer (max PHP version):
   rules:
@@ -199,6 +197,10 @@ phpunit (drupal 8):
     - when: on_success
   needs:
     - "composer (drupal 8)"
+
+test-only changes:
+  # Remove the parallel definition that is defined in the customized phpunit.
+  parallel:
 
 upgrade status:
   rules:
