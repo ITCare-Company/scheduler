@@ -68,9 +68,6 @@ variables:
 .composer-base:
   after_script:
     - !reference [ .create-environment-variables ]
-    # Delete the .eslintignore file, it is only required for DrupalCI
-    # @todo remove the file and this delete when no longer running DrupalCI
-    - rm $CI_PROJECT_DIR/$_WEB_ROOT/modules/custom/$CI_PROJECT_NAME/.eslintignore || true
     # Show the last two commits. Current directory /builds/project/scheduler ($CI_PROJECT_DIR) is correct.
     - git show -2 --stat --oneline
     - *show-variables
