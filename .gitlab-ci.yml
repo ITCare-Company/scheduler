@@ -66,6 +66,10 @@ variables:
   - when: on_success
 
 .composer-base:
+  before_script:
+    # If testing against Drupal 11 then swap in a different composer file to load dev versions and
+    # merge-request branches of several third-party modules which which do not have a fully compatible release yet.
+    - if [[ $DRUPAL_CORE =~ ^11 ]]; then rm composer.json; mv composer_for_d11_testing.json composer.json; echo "Using composer_for_d11_testing.json"; fi;
   after_script:
     - !reference [ .create-environment-variables ]
     # Show the last two commits. Current directory /builds/project/scheduler ($CI_PROJECT_DIR) is correct.
@@ -103,11 +107,6 @@ composer (next major):
   rules:
     - !reference [ .opt-in-next-major-rule ]
     - *manual-if-not-mr-rule
-  before_script:
-    # Swap in a different composer file for Next Major. This loads dev versions or merge-request branches of several
-    # third-party modules which are required for testing, but which do not have Drupal 11 release yet.
-    - rm composer.json
-    - mv composer_next_major.json composer.json
 
 composer (drupal 8):
   extends: .composer-base
