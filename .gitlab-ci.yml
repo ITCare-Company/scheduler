@@ -76,9 +76,10 @@ variables:
     - git show -2 --stat --oneline
     - *show-variables
     # - cat composer.json
-    - COLUMNS=120 composer show | grep -E '\/(core |rules|commerce|entity|inline_entity_form|workbench|drush|devel_generate)'
+    - COLUMNS=120 composer show | grep -E '\/(core |rules|commerce|entity|inline_entity_form|workbench|drush|devel_generate|address)'
 
 composer (max PHP version):
+  # Using when: manual needs 'allow failure: true' otherwise the overall pipeline status shows 'blocked'
   rules:
     - !reference [ .opt-in-max-php-rule ]
     - when: manual
@@ -110,8 +111,7 @@ composer (drupal 8):
   extends: .composer-base
   rules:
     - *opt-in-drupal8-rule
-    - when: manual
-  allow_failure: true
+    - *manual-if-not-mr-rule
   variables:
     PHP_VERSION: 7.4
     DRUPAL_CORE: 8.9.20
@@ -173,7 +173,7 @@ phpunit:
       fi
     # Patch to disable strict config schema validation on older versions of core.
     # See https://www.drupal.org/project/scheduler/issues/3451750
-    - if [[ $DRUPAL_CORE =~ ^(8.9|9.5|10.2) ]]; then patch -p1 --verbose < tests/fixtures/3451750-strict-config-schema.patch; fi
+    - if [[ $DRUPAL_CORE =~ ^(8.9|9.5|10.2) ]]; then patch -p1 --verbose < tests/3451750-strict-config-schema.patch; fi
     - echo "End of before_script _PHPUNIT_CONCURRENT=$_PHPUNIT_CONCURRENT _PHPUNIT_EXTRA=$_PHPUNIT_EXTRA"
 
 phpunit (next minor):
@@ -197,6 +197,7 @@ phpunit (drupal 8):
     - when: on_success
   needs:
     - "composer (drupal 8)"
+  allow_failure: true
 
 test-only changes:
   # Remove the parallel definition that is defined in the customized phpunit.
