@@ -1,7 +1,7 @@
 name: Scheduler
 type: module
 description: 'Publish and unpublish content and entities automatically on specified dates and times.'
-core_version_requirement: ^8 || ^9 || ^10
+core_version_requirement: ^8 || ^9 || ^10 || ^11
 configure: scheduler.admin_form
 dependencies:
   - drupal:system (>= 8.8.3)
