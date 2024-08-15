@@ -121,7 +121,10 @@ composer (drupal 8):
 eslint:
   allow_failure: false
   after_script:
+    - cd $CI_PROJECT_DIR/$_WEB_ROOT/modules/custom
+    - ls -lG .{eslint,prettier}* || true
     - cd $CI_PROJECT_DIR/$_WEB_ROOT/modules/custom/$CI_PROJECT_NAME
+    - ls -lG .{eslint,prettier}* || true
     - test -f .eslintignore && echo "===  This is .eslintignore  ===" && cat .eslintignore || true
     - test -f .prettierignore && echo "=== This is .prettierignore ===" && cat .prettierignore || true
 
