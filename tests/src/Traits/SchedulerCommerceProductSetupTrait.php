@@ -72,6 +72,12 @@ trait SchedulerCommerceProductSetupTrait {
    */
   public function schedulerCommerceProductSetUp() {
 
+    if (version_compare(\Drupal::VERSION, '8', '=')) {
+      // When testing in Drupal 8 do nothing here, as the Commerce module is not
+      // installed, due to Address being incompatible.
+      exit;
+    }
+
     /** @var Store $store */
     $this->store = $this->entityStorageObject('commerce_store')->create([
       'type' => 'online',
