@@ -29,6 +29,7 @@ abstract class SchedulerJavascriptTestBase extends WebDriverTestBase {
   protected static $modules = [
     'scheduler',
     'media',
+    'commerce_product',
     'taxonomy',
   ];
 

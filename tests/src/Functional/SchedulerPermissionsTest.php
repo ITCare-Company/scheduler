@@ -234,6 +234,7 @@ class SchedulerPermissionsTest extends SchedulerBrowserTestBase {
     foreach (self::dataStandardEntityTypes() as $key => $values) {
       $data["$key-1"] = array_merge($values, ['nodeUser']);
       $data["$key-2"] = array_merge($values, ['mediaUser']);
+      $data["$key-3"] = array_merge($values, ['commerceProductUser']);
       $data["$key-4"] = array_merge($values, ['taxonomyTermUser']);
     }
     return $data;
