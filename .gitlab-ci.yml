@@ -111,10 +111,16 @@ composer (drupal 8):
   extends: .composer-base
   rules:
     - *opt-in-drupal8-rule
-    - *manual-if-not-mr-rule
+    - when: manual
+      allow_failure: true
   variables:
     PHP_VERSION: 7.4
     DRUPAL_CORE: 8.9.20
+  before_script:
+    - !reference [.composer-base, before_script]
+    # Some tests need to be modifed to allow running on Drupal 8
+    # See https://www.drupal.org/project/scheduler/issues/3356800
+    - patch -p1 < tests/3356800-d8.patch
 
 # -------------------------------- VALIDATE ------------------------------------
 
@@ -176,7 +182,7 @@ phpunit:
       fi
     # Patch to disable strict config schema validation on older versions of core.
     # See https://www.drupal.org/project/scheduler/issues/3451750
-    - if [[ $DRUPAL_CORE =~ ^(8.9|9.5|10.2) ]]; then patch -p1 --verbose < tests/3451750-strict-config-schema.patch; fi
+    - if [[ $DRUPAL_CORE =~ ^(8.9|9.5|10.2) ]]; then patch -p1 < tests/3451750-strict-config-schema.patch; fi
     - echo "End of before_script _PHPUNIT_CONCURRENT=$_PHPUNIT_CONCURRENT _PHPUNIT_EXTRA=$_PHPUNIT_EXTRA"
 
 phpunit (next minor):

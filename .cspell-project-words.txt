@@ -1,5 +1,6 @@
 # Drupal components, module names and programming terms
 commerceproduct
+commerceguys
 mediatype
 nodetype
 taxonomyterm
