@@ -244,7 +244,7 @@ trait SchedulerSetupTrait {
    * @return \Drupal\Core\Entity\EntityInterface
    *   The created entity object.
    */
-  public function createEntity(string $entityTypeId, string $bundle = NULL, array $values = []) {
+  public function createEntity(string $entityTypeId, ?string $bundle = NULL, array $values = []) {
 
     switch ($entityTypeId) {
       case 'node':
@@ -329,7 +329,7 @@ trait SchedulerSetupTrait {
    * @return \Drupal\Core\Entity\EntityTypeInterface
    *   The stored entity type object.
    */
-  public function entityTypeObject(string $entityTypeId, string $bundle = NULL) {
+  public function entityTypeObject(string $entityTypeId, ?string $bundle = NULL) {
     if (empty($bundle) || $bundle == 'non-enabled') {
       $default_types = [
         'node' => $this->type,
@@ -448,7 +448,7 @@ trait SchedulerSetupTrait {
    * @return \Drupal\Core\Url
    *   The url object for adding the required entity.
    */
-  public function entityAddUrl(string $entityTypeId, string $bundle = NULL) {
+  public function entityAddUrl(string $entityTypeId, ?string $bundle = NULL) {
     switch ($entityTypeId) {
       case 'node':
         $bundle = ($bundle == 'non-enabled') ? $this->nonSchedulerType : ($bundle ?? $this->type);
