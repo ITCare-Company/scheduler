@@ -4,8 +4,8 @@ namespace Drupal\Tests\scheduler\Traits;
 
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
-use Drupal\Tests\node\Traits\NodeCreationTrait;
 use Drupal\Tests\Traits\Core\CronRunTrait;
+use Drupal\Tests\node\Traits\NodeCreationTrait;
 
 /**
  * Generic setup for all Scheduler tests.

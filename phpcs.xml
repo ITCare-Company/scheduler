@@ -26,7 +26,8 @@
     <exclude name="DrupalPractice.Commenting.CommentEmptyLine.SpacingAfter"/>
   </rule>
   <rule ref="Drupal">
-    <!-- There appears to be two rules checking nearly the same thing. -->
+    <!-- Allow empty lines after comments. There appears to be two rules
+         checking nearly the same thing. -->
     <exclude name="Drupal.Commenting.InlineComment.SpacingAfter"/>
   </rule>
 
@@ -37,10 +38,16 @@
     <severity>5</severity>
   </rule>
 
+  <!-- Allow long lines in .md files. -->
+  <rule ref="Drupal.Files.TxtFileLineLength.TooLong">
+    <exclude-pattern>docs/*\.md</exclude-pattern>
+  </rule>
+
   <!-- Ignore all files that match these patterns. By default the full file -->
   <!-- path is checked, unless type=relative is used. There is an implied * -->
   <!-- wildcard at each end and periods and slashes must be escaped using \ -->
   <exclude-pattern>\/_+ignore</exclude-pattern>
   <exclude-pattern>interdif</exclude-pattern>
+  <exclude-pattern>node_modules\/</exclude-pattern>
 
 </ruleset>
