@@ -26,6 +26,7 @@ variables:
   _SHOW_ENVIRONMENT_VARIABLES: 1
   _PHPUNIT_CONCURRENT: 1
   _PHPUNIT_TESTGROUPS: ''
+  _CSPELL_EXTRA: '--dot'
 
 ################
 # Job overrides
@@ -118,7 +119,7 @@ composer (drupal 8):
     DRUPAL_CORE: 8.9.20
   before_script:
     - !reference [.composer-base, before_script]
-    # Some tests need to be modifed to allow running on Drupal 8
+    # Some tests need to be modified to allow running on Drupal 8
     # See https://www.drupal.org/project/scheduler/issues/3356800
     - patch -p1 < tests/3356800-d8.patch
 

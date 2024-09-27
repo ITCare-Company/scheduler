@@ -1,3 +1,4 @@
+# cspell:ignore q0rban tugboatqa bcmath updatedb
 services:
   php:
     image: q0rban/tugboat-drupal:10
@@ -32,7 +33,7 @@ services:
         # Composer package repository.
         composer config repositories.tugboat vcs $TUGBOAT_ROOT
 
-        # Now we can require this module, specifing the branch name we created
+        # Now we can require this module, specifying the branch name we created
         # above that uses the $TUGBOAT_REPO_ID environment variable.
         composer require drupal/scheduler:dev-$TUGBOAT_REPO_ID
 
@@ -173,14 +174,14 @@ services:
         vendor/bin/drush user-add-role 'media_editor' 'Madeline media editor'
         vendor/bin/drush user-create 'Marvin media viewer'
         vendor/bin/drush user-add-role 'media_viewer' 'Marvin media viewer'
-        vendor/bin/drush user-create 'Prodie product editor'
-        vendor/bin/drush user-add-role 'product_editor' 'Prodie product editor'
+        vendor/bin/drush user-create 'Prodigy product editor'
+        vendor/bin/drush user-add-role 'product_editor' 'Prodigy product editor'
         vendor/bin/drush user-create 'Proctor product viewer'
         vendor/bin/drush user-add-role 'product_viewer' 'Proctor product viewer'
-        vendor/bin/drush user-create 'Tom term editor'
-        vendor/bin/drush user-add-role 'term_editor' 'Tom term editor'
-        vendor/bin/drush user-create 'Tavvy term viewer'
-        vendor/bin/drush user-add-role 'term_viewer' 'Tavvy term viewer'
+        vendor/bin/drush user-create 'Terra term editor'
+        vendor/bin/drush user-add-role 'term_editor' 'Terra term editor'
+        vendor/bin/drush user-create 'Tevet term viewer'
+        vendor/bin/drush user-add-role 'term_viewer' 'Tevet term viewer'
 
         # Generate content for bundles that have scheduling enabled.
         vendor/bin/drush devel-generate-terms 3 --bundles=tags
@@ -206,7 +207,7 @@ services:
 
         # Update this module, including all dependencies.
         composer update drupal/scheduler --with-all-dependencies
-        vendor/bin/drush --yes updb
+        vendor/bin/drush --yes updatedb
         vendor/bin/drush cache:rebuild
 
   mysql:
