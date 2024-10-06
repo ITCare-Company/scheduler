@@ -1,6 +1,6 @@
 name: 'Scheduler API Legacy Test'
 type: module
-description: 'Sub-module containing the legacy hook implementations.'
+description: 'Sub-module containing the legacy hook implementations and event namespaces.'
 package: Testing
 dependencies:
   - scheduler:scheduler
