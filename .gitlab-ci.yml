@@ -21,8 +21,10 @@ variables:
   OPT_IN_TEST_PREVIOUS_MAJOR: 1
   OPT_IN_TEST_NEXT_MINOR: 1
   OPT_IN_TEST_NEXT_MAJOR: 1
+  OPT_IN_TEST_DRUPAL9: 1
   OPT_IN_TEST_DRUPAL8: 1
   RUN_JOB_UPGRADE_STATUS: 1
+
   _SHOW_ENVIRONMENT_VARIABLES: 1
   _PHPUNIT_CONCURRENT: 1
   _PHPUNIT_TESTGROUPS: ''
@@ -51,6 +53,10 @@ variables:
     printf "MODULE_NAME                 = %s\n" $MODULE_NAME
 
 # -------------------------------- BUILD ---------------------------------------
+
+.opt-in-drupal9-rule: &opt-in-drupal9-rule
+  if: '$OPT_IN_TEST_DRUPAL9 != "1"'
+  when: never
 
 .opt-in-drupal8-rule: &opt-in-drupal8-rule
   if: '$OPT_IN_TEST_DRUPAL8 != "1"'
@@ -95,7 +101,8 @@ composer (previous minor):
 composer (previous major):
   rules:
     - !reference [ .opt-in-previous-major-rule ]
-    - *manual-if-not-mr-rule
+    - when: manual
+      allow_failure: true
 
 composer (next minor):
   rules:
@@ -107,6 +114,16 @@ composer (next major):
   rules:
     - !reference [ .opt-in-next-major-rule ]
     - *manual-if-not-mr-rule
+
+composer (drupal 9):
+  extends: .composer-base
+  rules:
+    - *opt-in-drupal9-rule
+    - when: manual
+      allow_failure: true
+  variables:
+    PHP_VERSION: 8.1
+    DRUPAL_CORE: ^9.5
 
 composer (drupal 8):
   extends: .composer-base
@@ -168,7 +185,8 @@ phpunit:
       printf "_PHPUNIT_CONCURRENT         = %s\n" $_PHPUNIT_CONCURRENT &&
       printf "_PHPUNIT_TESTGROUPS         = %s\n" "$_PHPUNIT_TESTGROUPS" &&
       printf "_PHPUNIT_EXTRA              = %s\n" "$_PHPUNIT_EXTRA" &&
-      printf "SYMFONY_DEPRECATIONS_HELPER = %s\n" $SYMFONY_DEPRECATIONS_HELPER
+      printf "SYMFONY_DEPRECATIONS_HELPER = %s\n" "$SYMFONY_DEPRECATIONS_HELPER" &&
+      printf "MINK_DRIVER_ARGS_WEBDRIVER  = %s\n" "$MINK_DRIVER_ARGS_WEBDRIVER"
     - |
       if [[ "$_MATRIX_VALUE" != "" ]]; then
         if [[ "$_PHPUNIT_CONCURRENT" == "0" ]]; then
@@ -183,7 +201,7 @@ phpunit:
       fi
     # Patch to disable strict config schema validation on older versions of core.
     # See https://www.drupal.org/project/scheduler/issues/3451750
-    - if [[ $DRUPAL_CORE =~ ^(8.9|9.5|10.2) ]]; then patch -p1 < tests/3451750-strict-config-schema.patch; fi
+    - if [[ $DRUPAL_CORE =~ ^(\^)?(8.9|9.5|10.2) ]]; then patch -p1 < tests/3451750-strict-config-schema.patch; fi
     - echo "End of before_script _PHPUNIT_CONCURRENT=$_PHPUNIT_CONCURRENT _PHPUNIT_EXTRA=$_PHPUNIT_EXTRA"
 
 phpunit (next minor):
@@ -198,8 +216,24 @@ phpunit (next major):
     _PHPUNIT_CONCURRENT: 1
     SYMFONY_DEPRECATIONS_HELPER: "ignoreFile=$CI_PROJECT_DIR/$_WEB_ROOT/core/.deprecation-ignore.txt"
 
-phpunit (drupal 8):
+phpunit (drupal 9):
   extends: phpunit
+  services:
+    - !reference [ .with-database ]
+    - !reference [ .with-chrome-legacy ]
+  rules:
+    - *opt-in-drupal9-rule
+    - !reference [ .skip-phpunit-rule ]
+    - !reference [ .phpunit-tests-exist-rule ]
+    - when: on_success
+  needs:
+    - "composer (drupal 9)"
+  allow_failure: true
+  variables:
+    MINK_DRIVER_ARGS_WEBDRIVER: $MINK_DRIVER_ARGS_WEBDRIVER_LEGACY
+
+phpunit (drupal 8):
+  extends: phpunit (drupal 9)
   rules:
     - *opt-in-drupal8-rule
     - !reference [ .skip-phpunit-rule ]
@@ -207,7 +241,6 @@ phpunit (drupal 8):
     - when: on_success
   needs:
     - "composer (drupal 8)"
-  allow_failure: true
 
 test-only changes:
   # Remove the parallel definition that is defined in the customized phpunit.
