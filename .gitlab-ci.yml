@@ -124,6 +124,7 @@ composer (drupal 9):
   variables:
     PHP_VERSION: 8.1
     DRUPAL_CORE: ^9.5
+    _TARGET_PHP_IMAGE_VARIANT: "apache"
 
 composer (drupal 8):
   extends: .composer-base
@@ -134,6 +135,7 @@ composer (drupal 8):
   variables:
     PHP_VERSION: 7.4
     DRUPAL_CORE: 8.9.20
+    _TARGET_PHP_IMAGE_VARIANT: "apache"
   before_script:
     - !reference [.composer-base, before_script]
     # Some tests need to be modified to allow running on Drupal 8
@@ -231,6 +233,7 @@ phpunit (drupal 9):
   allow_failure: true
   variables:
     MINK_DRIVER_ARGS_WEBDRIVER: $MINK_DRIVER_ARGS_WEBDRIVER_LEGACY
+    _TARGET_PHP_IMAGE_VARIANT: "apache"
 
 phpunit (drupal 8):
   extends: phpunit (drupal 9)
