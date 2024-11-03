@@ -16,6 +16,13 @@
   <!-- .yml files are not processed by phpcs -->
   <arg name="extensions" value="php,module,inc,install,css,md"/>
 
+  <!-- Ignore all files that match these patterns. By default the full file -->
+  <!-- path is checked, unless type=relative is used. There is an implied * -->
+  <!-- wildcard at each end and periods and slashes must be escaped using \ -->
+  <exclude-pattern>\/_+ignore</exclude-pattern>
+  <exclude-pattern>interdif</exclude-pattern>
+  <exclude-pattern>node_modules\/</exclude-pattern>
+
   <!-- Use 's' to print the full sniff name in the report. -->
   <arg value="s"/>
   <arg value="-colors"/>
@@ -43,11 +50,10 @@
     <exclude-pattern>docs/*\.md</exclude-pattern>
   </rule>
 
-  <!-- Ignore all files that match these patterns. By default the full file -->
-  <!-- path is checked, unless type=relative is used. There is an implied * -->
-  <!-- wildcard at each end and periods and slashes must be escaped using \ -->
-  <exclude-pattern>\/_+ignore</exclude-pattern>
-  <exclude-pattern>interdif</exclude-pattern>
-  <exclude-pattern>node_modules\/</exclude-pattern>
+  <!-- Ignore the AlphabeticallySortedUses rule because this was added to Coder before being agreed by Coding Standards team -->
+  <!-- Coding Standards https://www.drupal.org/i/1624564 and Coder https://www.drupal.org/i/3483028-->
+  <rule ref="SlevomatCodingStandard.Namespaces.AlphabeticallySortedUses">
+    <severity>0</severity>
+  </rule>
 
 </ruleset>
