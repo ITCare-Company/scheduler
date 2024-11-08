@@ -36,3 +36,6 @@ Wenlock
 
 # Real words missing from dictionary
 unrequired
+
+# Other
+Rnnn

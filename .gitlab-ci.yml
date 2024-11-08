@@ -50,6 +50,8 @@ variables:
     printf "CI_JOB_NAME chopped         = %s\n" "${CI_JOB_NAME%:*}" &&
     printf "DRUPAL_CORE                 = %s\n" $DRUPAL_CORE &&
     printf "PHP_VERSION                 = %s\n" $PHP_VERSION &&
+    printf "PHP_IMAGE_VARIANT           = %s\n" $PHP_IMAGE_VARIANT &&
+    printf "PHP_IMAGE_TAG               = %s\n" $PHP_IMAGE_TAG &&
     printf "MODULE_NAME                 = %s\n" $MODULE_NAME
 
 # -------------------------------- BUILD ---------------------------------------
@@ -79,6 +81,7 @@ variables:
     - if [[ $DRUPAL_CORE =~ ^11 ]]; then rm composer.json; mv composer_for_d11_testing.json composer.json; echo "Using composer_for_d11_testing.json"; fi;
   after_script:
     - !reference [ .create-environment-variables ]
+    - printf "Top 10 folders by size:\n" && du -m web/* | sort -n -r | head -n 10 || true
     # Show the last two commits. Current directory /builds/project/scheduler ($CI_PROJECT_DIR) is correct.
     - git show -2 --stat --oneline
     - *show-variables
@@ -89,6 +92,7 @@ composer (max PHP version):
   # Using when: manual needs 'allow failure: true' otherwise the overall pipeline status shows 'blocked'
   rules:
     - !reference [ .opt-in-max-php-rule ]
+    - !reference [ .check-max-php-version-rule ]
     - when: manual
       allow_failure: true
 
