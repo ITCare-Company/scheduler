@@ -145,22 +145,24 @@ composer (drupal 8):
 # Custom job to check MkDocs files for incorrectly formatted links before they are published.
 mkdocs:
   stage: build
+  image: $_CONFIG_DOCKERHUB_ROOT/php-$PHP_VERSION-$_TARGET_PHP_IMAGE_VARIANT:$_TARGET_PHP_IMAGE_TAG
   rules:
+    - if: '$SKIP_MKDOCS == "1"'
+      when: never
     - changes:
         - docs/**/*
         - mkdocs.yml
       when: on_success
-  needs: [composer]
   script:
     - !reference ['.calculate-gitlab-ref']
+    - !reference [ .create-environment-variables ]
+    - *show-variables
     - EXIT_CODE=0;
-    - echo -e "Get the script from gitlab_templates\nExecuting curl -L --output $_WEB_ROOT/modules/custom/$CI_PROJECT_NAME/scripts/unformatted-links.php https://git.drupalcode.org/$_CURL_TEMPLATES_REPO/-/raw/$_CURL_TEMPLATES_REF/scripts/unformatted-links.php"
-    - curl -L --output $_WEB_ROOT/modules/custom/$CI_PROJECT_NAME/scripts/unformatted-links.php https://git.drupalcode.org/$_CURL_TEMPLATES_REPO/-/raw/$_CURL_TEMPLATES_REF/scripts/unformatted-links.php
+    - echo -e "Get the script from gitlab_templates\nExecuting curl -L --output scripts/unformatted-links.php https://git.drupalcode.org/$_CURL_TEMPLATES_REPO/-/raw/$_CURL_TEMPLATES_REF/scripts/unformatted-links.php"
+    - curl -L --output scripts/unformatted-links.php https://git.drupalcode.org/$_CURL_TEMPLATES_REPO/-/raw/$_CURL_TEMPLATES_REF/scripts/unformatted-links.php
+    - pwd && ls -la scripts/*
     - php scripts/unformatted-links.php || EXIT_CODE=1
     - exit $EXIT_CODE
-
-pages:
-  needs: [mkdocs]
 
 # -------------------------------- VALIDATE ------------------------------------
 

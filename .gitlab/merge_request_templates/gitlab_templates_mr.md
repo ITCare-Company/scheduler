@@ -1,5 +1,4 @@
-Draft: #gt-issue-num MR NNN short text
-
+Draft: #gt-issue-num MRnnn short text
 - Gitlab Templates issue #gt-issue-num
-- Gitlab Templates [MR NNN](https://git.drupalcode.org/project/gitlab_templates/-/merge_requests/NNN)
-- Scheduler test issue #3445052
+- Gitlab Templates [MRnnn](https://git.drupalcode.org/project/gitlab_templates/-/merge_requests/nnn)
+- Scheduler test issue #3445052 (2.x) #3480501 (7.x-1.x)
