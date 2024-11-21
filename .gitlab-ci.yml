@@ -128,7 +128,7 @@ composer (drupal 9):
   variables:
     PHP_VERSION: 8.1
     DRUPAL_CORE: ^9.5
-    _TARGET_PHP_IMAGE_VARIANT: "apache"
+    PHP_IMAGE_VARIANT: 'apache'
 
 composer (drupal 8):
   extends: .composer-base
@@ -138,8 +138,8 @@ composer (drupal 8):
       allow_failure: true
   variables:
     PHP_VERSION: 7.4
-    DRUPAL_CORE: 8.9.20
-    _TARGET_PHP_IMAGE_VARIANT: "apache"
+    DRUPAL_CORE: ^8.9
+    PHP_IMAGE_VARIANT: 'apache'
   before_script:
     - !reference [.composer-base, before_script]
     # Some tests need to be modified to allow running on Drupal 8
@@ -149,7 +149,7 @@ composer (drupal 8):
 # Custom job to check MkDocs files for incorrectly formatted links before they are published.
 mkdocs:
   stage: build
-  image: $_CONFIG_DOCKERHUB_ROOT/php-$PHP_VERSION-$_TARGET_PHP_IMAGE_VARIANT:$_TARGET_PHP_IMAGE_TAG
+  image: $_CONFIG_DOCKERHUB_ROOT/php-$PHP_VERSION-$PHP_IMAGE_VARIANT:$PHP_IMAGE_TAG
   rules:
     - if: '$SKIP_MKDOCS == "1"'
       when: never
@@ -231,7 +231,7 @@ phpunit:
       fi
     # Patch to disable strict config schema validation on older versions of core.
     # See https://www.drupal.org/project/scheduler/issues/3451750
-    - if [[ $DRUPAL_CORE =~ ^(\^)?(8.9|9.5|10.2) ]]; then patch -p1 < tests/3451750-strict-config-schema.patch; fi
+    - vendor/bin/drush status | awk "NR==1{print \$4}" | grep -E '^(8.|9.|10.2)' && echo 'Core version is before 10.3, patching to remove strict config validation' && patch -p1 < tests/3451750-strict-config-schema.patch
     - echo "End of before_script _PHPUNIT_CONCURRENT=$_PHPUNIT_CONCURRENT _PHPUNIT_EXTRA=$_PHPUNIT_EXTRA"
 
 phpunit (next minor):
@@ -261,7 +261,6 @@ phpunit (drupal 9):
   allow_failure: true
   variables:
     MINK_DRIVER_ARGS_WEBDRIVER: $MINK_DRIVER_ARGS_WEBDRIVER_LEGACY
-    _TARGET_PHP_IMAGE_VARIANT: "apache"
 
 phpunit (drupal 8):
   extends: phpunit (drupal 9)
