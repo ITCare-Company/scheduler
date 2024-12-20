@@ -47,7 +47,7 @@ variables:
     printf "CI_PAGES_URL                = %s\n" $CI_PAGES_URL &&
     printf "CI_PROJECT_NAME             = %s\n" $CI_PROJECT_NAME &&
     printf "CI_JOB_NAME                 = %s\n" "$CI_JOB_NAME" &&
-    printf "CI_JOB_NAME chopped         = %s\n" "${CI_JOB_NAME%:*}" &&
+    printf "CI_JOB_NAME trimmed from :  = %s\n" "${CI_JOB_NAME%:*}" &&
     printf "DRUPAL_CORE                 = %s\n" $DRUPAL_CORE &&
     printf "PHP_VERSION                 = %s\n" $PHP_VERSION &&
     printf "PHP_IMAGE_VARIANT           = %s\n" $PHP_IMAGE_VARIANT &&
@@ -80,12 +80,15 @@ variables:
     - if [[ $DRUPAL_CORE =~ ^11 ]]; then rm composer.json; mv composer_for_d11_testing.json composer.json; echo "Using composer_for_d11_testing.json"; fi;
   after_script:
     - !reference [ .create-environment-variables ]
+    - pwd && echo "Top-level directories" && ls -tldr */
     - printf "Top 10 folders by size:\n" && du -m web/* | sort -n -r | head -n 10 || true
     # Show the last two commits. Current directory /builds/project/scheduler ($CI_PROJECT_DIR) is correct.
     - git show -2 --stat --oneline
+    - |
+      [[ $CI_PIPELINE_SOURCE == "merge_request_event" ]] && BASELINE=${CI_MERGE_REQUEST_TARGET_BRANCH_SHA:-$CI_MERGE_REQUEST_DIFF_BASE_SHA} && git diff --stat $BASELINE && git diff $BASELINE -- .gitlab-ci.yml | head -n 30 || true
     - *show-variables
     # - cat composer.json
-    - COLUMNS=120 composer show | grep -E '\/(core |rules|commerce|entity|inline_entity_form|workbench|drush|devel_generate|address)'
+    - COLUMNS=130 composer show | grep -E '\/(core |rules|commerce|entity|inline_entity_form|workbench|drush|devel_generate|address)'
 
 composer (max PHP version):
   # Using when: manual needs 'allow failure: true' otherwise the overall pipeline status shows 'blocked'
