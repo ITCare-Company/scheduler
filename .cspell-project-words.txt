@@ -17,6 +17,7 @@ randomstring
 logfile
 oneline
 mkdocs
+testgroup
 
 # Scheduler words
 timecheck

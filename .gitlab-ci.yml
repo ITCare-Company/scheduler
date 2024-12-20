@@ -51,8 +51,7 @@ variables:
     printf "DRUPAL_CORE                 = %s\n" $DRUPAL_CORE &&
     printf "PHP_VERSION                 = %s\n" $PHP_VERSION &&
     printf "PHP_IMAGE_VARIANT           = %s\n" $PHP_IMAGE_VARIANT &&
-    printf "PHP_IMAGE_TAG               = %s\n" $PHP_IMAGE_TAG &&
-    printf "MODULE_NAME                 = %s\n" $MODULE_NAME
+    printf "PHP_IMAGE_TAG               = %s\n" $PHP_IMAGE_TAG
 
 # -------------------------------- BUILD ---------------------------------------
 
@@ -195,18 +194,31 @@ phpstan:
 
 # -------------------------------- TEST ----------------------------------------
 
+.scheduler-testgroup-rule: &scheduler-testgroup-rule
+  # Run some test groups manually not automatically.
+  # @todo put back "scheduler_drush" when https://www.drupal.org/project/scheduler/issues/3359998 is solved.
+  # @todo put back "scheduler_workbench" when https://www.drupal.org/project/scheduler/issues/3495229 is solved.
+  - if: $_MATRIX_VALUE == "scheduler_drush" || $_MATRIX_VALUE == "scheduler_workbench"
+    when: manual
+    allow_failure: true
+  - when: on_success
+
 phpunit:
   parallel:
     matrix:
       # Run test groups in parallel. This also speeds up identification of failing tests.
-      # @todo put back "scheduler_drush" when https://www.drupal.org/i/3359998 is solved.
       - _MATRIX_VALUE:
         - scheduler
         - scheduler_api
-        # - scheduler_drush
+        - scheduler_drush
         - scheduler_js
         - scheduler_kernel
         - scheduler_rules_integration
+        - scheduler_workbench
+  rules:
+    - !reference [ .opt-in-current-rule ]
+    - !reference [ .skip-phpunit-rule ]
+    - *scheduler-testgroup-rule
   before_script:
     # If any variation also needs a before_script then add - !reference [phpunit, before_script] to include this script.
     - *show-variables
@@ -234,13 +246,40 @@ phpunit:
     - vendor/bin/drush status | awk "NR==1{print \$4}" | grep -E '^(8.|9.|10.2)' && echo 'Core version is before 10.3, patching to remove strict config validation' && patch -p1 < tests/3451750-strict-config-schema.patch
     - echo "End of before_script _PHPUNIT_CONCURRENT=$_PHPUNIT_CONCURRENT _PHPUNIT_EXTRA=$_PHPUNIT_EXTRA"
 
+phpunit (max PHP version):
+  rules:
+    - !reference [ .opt-in-max-php-rule ]
+    - !reference [ .skip-phpunit-rule ]
+    - !reference [ .check-max-php-version-rule ]
+    - *scheduler-testgroup-rule
+
+phpunit (previous minor):
+  rules:
+    - !reference [ .opt-in-previous-minor-rule ]
+    - !reference [ .skip-phpunit-rule ]
+    - *scheduler-testgroup-rule
+
+phpunit (previous major):
+  rules:
+    - !reference [ .opt-in-previous-major-rule ]
+    - !reference [ .skip-phpunit-rule ]
+    - *scheduler-testgroup-rule
+
 phpunit (next minor):
+  rules:
+    - !reference [ .opt-in-next-minor-rule ]
+    - !reference [ .skip-phpunit-rule ]
+    - *scheduler-testgroup-rule
   variables:
     # Use core ignoreFile to show deprecations. This is only used when $_PHPUNIT_CONCURRENT=1 so make sure that is also set.
     _PHPUNIT_CONCURRENT: 1
     SYMFONY_DEPRECATIONS_HELPER: "ignoreFile=$CI_PROJECT_DIR/$_WEB_ROOT/core/.deprecation-ignore.txt"
 
 phpunit (next major):
+  rules:
+    - !reference [ .opt-in-next-major-rule ]
+    - !reference [ .skip-phpunit-rule ]
+    - *scheduler-testgroup-rule
   variables:
     # Use core ignoreFile to show deprecations. This is only used when $_PHPUNIT_CONCURRENT=1 so make sure that is also set.
     _PHPUNIT_CONCURRENT: 1
@@ -254,8 +293,7 @@ phpunit (drupal 9):
   rules:
     - *opt-in-drupal9-rule
     - !reference [ .skip-phpunit-rule ]
-    - !reference [ .phpunit-tests-exist-rule ]
-    - when: on_success
+    - *scheduler-testgroup-rule
   needs:
     - "composer (drupal 9)"
   allow_failure: true
@@ -267,8 +305,7 @@ phpunit (drupal 8):
   rules:
     - *opt-in-drupal8-rule
     - !reference [ .skip-phpunit-rule ]
-    - !reference [ .phpunit-tests-exist-rule ]
-    - when: on_success
+    - *scheduler-testgroup-rule
   needs:
     - "composer (drupal 8)"
 
