@@ -350,7 +350,7 @@ trait SchedulerSetupTrait {
     if (!$entity_type = $entityTypeManager->getStorage($bundleEntityType)->load($bundle)) {
       // Incorrect parameter values.
       throw new \Exception(sprintf('Unrecognized combination of entityTypeId "%s" and bundle "%s" passed to entityTypeObject()', $entityTypeId, $bundle));
-    };
+    }
     return $entity_type;
   }
 

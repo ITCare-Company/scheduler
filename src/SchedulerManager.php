@@ -1044,7 +1044,7 @@ class SchedulerManager {
   public function getEnabledTypes($entityTypeId, $process) {
     if (!$plugin = $this->getPlugin($entityTypeId)) {
       return [];
-    };
+    }
     $types = $plugin->getTypes();
     $types = array_filter($types, function ($bundle) use ($process) {
       return $bundle->getThirdPartySetting('scheduler', $process . '_enable', $this->setting('default_' . $process . '_enable'));
