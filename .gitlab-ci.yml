@@ -28,6 +28,7 @@ variables:
   _PHPUNIT_CONCURRENT: 1
   _PHPUNIT_TESTGROUPS: ''
   _CSPELL_EXTRA: '--dot'
+  _ALL_VALIDATE_ALLOW_FAILURE: 0
 
 ################
 # Job overrides
@@ -175,22 +176,15 @@ mkdocs:
 # -------------------------------- VALIDATE ------------------------------------
 
 eslint:
-  allow_failure: false
   after_script:
+    - echo -e "\e[0Ksection_start:`date +%s`:eslint_files[collapsed=true]\r\e[0KShow ESLINT and PRETTIER files"
     - echo "Change to directory above the project"
     - cd $CI_PROJECT_DIR/$_WEB_ROOT/modules/custom
     - ls -lG .{eslint,prettier}* || true
     - echo "Change to the project directory"
     - cd $CI_PROJECT_DIR/$_WEB_ROOT/modules/custom/$CI_PROJECT_NAME
     - ls -lG .{eslint,prettier}* || true
-    - test -f .eslintignore && echo "===  This is .eslintignore  ===" && cat .eslintignore || true
-    - test -f .prettierignore && echo "=== This is .prettierignore ===" && cat .prettierignore || true
-
-stylelint:
-  allow_failure: false
-
-phpcs:
-  allow_failure: false
+    - echo -e "\e[0Ksection_end:`date +%s`:eslint_files\r\e[0K"
 
 phpstan:
   after_script:
