@@ -15,6 +15,7 @@ test_dependencies:
   - drupal:media
   - commerce:commerce
   - drupal:taxonomy
+  - eca:eca
 libraries:
   - admin-css
   - vertical-tabs
