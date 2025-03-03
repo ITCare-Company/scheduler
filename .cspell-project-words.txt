@@ -19,6 +19,7 @@ oneline
 mkdocs
 testgroup
 ksection
+kphpstan
 
 # Scheduler words
 timecheck
