@@ -72,10 +72,6 @@ workflow:
   - when: on_success
 
 .composer-base:
-  before_script:
-    # If testing against Drupal 11 then swap in a different composer file to load dev versions and
-    # merge-request branches of several third-party modules which which do not have a fully compatible release yet.
-    - if [[ $DRUPAL_CORE =~ ^11 ]]; then rm composer.json; mv composer_for_d11_testing.json composer.json; echo "Using composer_for_d11_testing.json"; fi;
   after_script:
     - pwd && echo "Top-level directories" && ls -tldr */
     - printf "Top 10 folders by size:\n" && du -m web/* | sort -n -r | head -n 10 || true
@@ -144,7 +140,6 @@ composer (drupal 8):
     DRUPAL_CORE: ^8.9
     PHP_IMAGE_VARIANT: 'apache'
   before_script:
-    - !reference [.composer-base, before_script]
     # Some tests need to be modified to allow running on Drupal 8
     # See https://www.drupal.org/project/scheduler/issues/3356800
     - patch -p1 < tests/3356800-d8.patch
