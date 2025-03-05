@@ -198,8 +198,7 @@ phpstan:
     when: never
   # Run some test groups manually not automatically.
   # @todo put back "scheduler_drush" when https://www.drupal.org/project/scheduler/issues/3359998 is solved.
-  # @todo put back "scheduler_workbench" when https://www.drupal.org/project/scheduler/issues/3495229 is solved.
-  - if: $_MATRIX_VALUE =~ /(drush|workbench)/
+  - if: $_MATRIX_VALUE =~ /(drush)/
     when: manual
     allow_failure: true
   - when: on_success
@@ -232,9 +231,8 @@ phpunit:
       printf "MINK_DRIVER_ARGS_WEBDRIVER  = %s\n" "$MINK_DRIVER_ARGS_WEBDRIVER"
     - |
       if [[ $_PHPUNIT_TESTGROUPS == "--all" ]]; then
-        # @todo put back "scheduler_drush" when https://www.drupal.org/project/scheduler/issues/3359998 is solved.
-        # @todo put back "scheduler_workbench" when https://www.drupal.org/project/scheduler/issues/3495229 is solved.
-        rm -v tests/src/Functional/SchedulerDrushTest.php tests/src/Functional/SchedulerWorkbenchModerationTest.php
+        # @todo put back SchedulerDrushTest when https://www.drupal.org/project/scheduler/issues/3359998 is solved.
+        rm -v tests/src/Functional/SchedulerDrushTest.php
       fi
     - |
       if [[ "$_MATRIX_VALUE" != "" && $_PHPUNIT_TESTGROUPS != "--all" ]]; then
