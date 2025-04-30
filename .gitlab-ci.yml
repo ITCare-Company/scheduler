@@ -47,6 +47,7 @@ workflow:
     printf "PROJECT_NAME                = %s\n" $PROJECT_NAME &&
     printf "MODULE_NAME                 = %s\n" $MODULE_NAME &&
     printf "DRUPAL_CORE                 = %s\n" $DRUPAL_CORE &&
+    printf "INSTALLED_DRUPAL_VERSION    = %s\n" $INSTALLED_DRUPAL_VERSION &&
     printf "PHP_VERSION                 = %s\n" $PHP_VERSION &&
     printf "PHP_IMAGE_VARIANT           = %s\n" $PHP_IMAGE_VARIANT &&
     printf "PHP_IMAGE_TAG               = %s\n" $PHP_IMAGE_TAG
@@ -196,8 +197,15 @@ phpstan:
   # If running all test groups in one, then we only need one job.
   - if: $_PHPUNIT_TESTGROUPS == "--all" && $_MATRIX_VALUE != "scheduler"
     when: never
+  # If running two or more groups, we only need one job. This is a work-around because trying to match
+  # $_PHPUNIT_TESTGROUPS !~ $_MATRIX_VALUE in the next condition to only run the selected matrix jobs never matches.
+  - if: $_PHPUNIT_TESTGROUPS =~ /(,)/ && $_MATRIX_VALUE == "scheduler"
+    when: on_success
+  # If running a specific test group then discard the jobs for the other matrix values.
+  - if: $_PHPUNIT_TESTGROUPS != "" && $_PHPUNIT_TESTGROUPS != "--all" && $_PHPUNIT_TESTGROUPS != $_MATRIX_VALUE
+    when: never
   # Run some test groups manually not automatically.
-  # @todo put back "scheduler_drush" when https://www.drupal.org/project/scheduler/issues/3359998 is solved.
+  # @todo restore "drush" to automatic when https://www.drupal.org/project/scheduler/issues/3359998 is solved.
   - if: $_MATRIX_VALUE =~ /(drush)/
     when: manual
     allow_failure: true
@@ -227,15 +235,14 @@ phpunit:
       printf "_PHPUNIT_CONCURRENT         = %s\n" $_PHPUNIT_CONCURRENT &&
       printf "_PHPUNIT_TESTGROUPS         = %s\n" "$_PHPUNIT_TESTGROUPS" &&
       printf "_PHPUNIT_EXTRA              = %s\n" "$_PHPUNIT_EXTRA" &&
-      printf "SYMFONY_DEPRECATIONS_HELPER = %s\n" "$SYMFONY_DEPRECATIONS_HELPER" &&
-      printf "MINK_DRIVER_ARGS_WEBDRIVER  = %s\n" "$MINK_DRIVER_ARGS_WEBDRIVER"
+      printf "SYMFONY_DEPRECATIONS_HELPER = %s\n" "$SYMFONY_DEPRECATIONS_HELPER"
     - |
+      # @todo Delete this rm when https://www.drupal.org/project/scheduler/issues/3359998 is solved.
       if [[ $_PHPUNIT_TESTGROUPS == "--all" ]]; then
-        # @todo put back SchedulerDrushTest when https://www.drupal.org/project/scheduler/issues/3359998 is solved.
         rm -v tests/src/Functional/SchedulerDrushTest.php
       fi
     - |
-      if [[ "$_MATRIX_VALUE" != "" && $_PHPUNIT_TESTGROUPS != "--all" ]]; then
+      if [[ "$_MATRIX_VALUE" != "" && $_PHPUNIT_TESTGROUPS == "" ]]; then
         if [[ "$_PHPUNIT_CONCURRENT" == "0" ]]; then
           # Specify parameters that will be passed to PHPUNIT (needs --group)
           export _PHPUNIT_EXTRA="$_PHPUNIT_EXTRA --group $_MATRIX_VALUE"
@@ -249,7 +256,7 @@ phpunit:
     # Patch to disable strict config schema validation on older versions of core.
     # See https://www.drupal.org/project/scheduler/issues/3451750
     - vendor/bin/drush status | awk "NR==1{print \$4}" | grep -E '^(8.|9.|10.2)' && echo 'Core version is before 10.3, patching to remove strict config validation' && patch -p1 < tests/3451750-strict-config-schema.patch
-    - echo "End of before_script _PHPUNIT_CONCURRENT=$_PHPUNIT_CONCURRENT _PHPUNIT_EXTRA=$_PHPUNIT_EXTRA"
+    - echo "End of before_script _PHPUNIT_EXTRA=$_PHPUNIT_EXTRA"
 
 phpunit (max PHP version):
   rules:
@@ -292,18 +299,12 @@ phpunit (next major):
 
 phpunit (drupal 9):
   extends: phpunit
-  services:
-    - !reference [ .with-database ]
-    - !reference [ .with-chrome-legacy ]
   rules:
     - *opt-in-drupal9-rule
     - !reference [ .skip-phpunit-rule ]
     - *scheduler-testgroup-rule
-  needs:
-    - "composer (drupal 9)"
+  needs: [composer (drupal 9)]
   allow_failure: true
-  variables:
-    MINK_DRIVER_ARGS_WEBDRIVER: $MINK_DRIVER_ARGS_WEBDRIVER_LEGACY
 
 phpunit (drupal 8):
   extends: phpunit (drupal 9)
@@ -311,8 +312,7 @@ phpunit (drupal 8):
     - *opt-in-drupal8-rule
     - !reference [ .skip-phpunit-rule ]
     - *scheduler-testgroup-rule
-  needs:
-    - "composer (drupal 8)"
+  needs: [composer (drupal 8)]
 
 test-only changes:
   # Remove the parallel definition that is defined in the customized phpunit.
