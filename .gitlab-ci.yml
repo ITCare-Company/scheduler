@@ -84,8 +84,9 @@ workflow:
         git diff --stat $BASELINE
         git diff $BASELINE -- .gitlab-ci.yml | head -n 30
       fi
+    # Read the build.env file, because variables created in a script section are not passed to after_script.
+    - IFS=$'\n' && export $(<build.env) && unset IFS
     - !reference [ .show-ci-variables ]
-    - source build.env
     - *show-variables
     - COLUMNS=130 composer show | grep -E '\/(core |rules|commerce|entity|inline_entity_form|workbench|drush|devel_generate|address|coder)'
 
