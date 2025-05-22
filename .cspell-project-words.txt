@@ -19,7 +19,7 @@ oneline
 mkdocs
 testgroup
 ksection
-kphpstan
+fastzip
 
 # Scheduler words
 timecheck
