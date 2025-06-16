@@ -37,8 +37,8 @@ variables:
 workflow:
   rules:
     - !reference [ .default-workflow ]
-    # Run if the branch starts with 'mr' followed by digits.
-    - if: $CI_COMMIT_BRANCH =~ /^mr[0-9]+/i
+    # Also run if the branch starts with 'mr' followed by digits or is the specific issue branch 3356800.
+    - if: $CI_COMMIT_BRANCH =~ /^mr[0-9]+/i || $CI_COMMIT_BRANCH =~ /^3356800/
 
 .show-variables: &show-variables
   - |
@@ -53,7 +53,7 @@ workflow:
     printf "PHP_IMAGE_VARIANT           = %s\n" $PHP_IMAGE_VARIANT &&
     printf "PHP_IMAGE_TAG               = %s\n" $PHP_IMAGE_TAG
     printf " \nBuild jobs\n----------\n"
-    printf "SKIP_PAGES                  = %s\n" "$SKIP_PAGES  $([[ $SKIP_PAGES != 0 ]] && echo '(not default)')"
+    printf "SKIP_PAGES                  = %s\n" "$SKIP_PAGES $([[ $SKIP_PAGES != 0 ]] && echo '(not default)')"
     printf "SKIP_MKDOCS                 = %s\n" "$SKIP_MKDOCS (custom variable)"
     printf " \nLint jobs\n---------\n"
     printf "SKIP_COMPOSER_LINT          = %s\n" "$SKIP_COMPOSER_LINT $([[ $SKIP_COMPOSER_LINT != 0 ]] && echo '(not default)')"
@@ -99,10 +99,12 @@ workflow:
   when: never
 
 # Re-usable rule for running the job automatically on Merge Requests and allowing it
-# to manually triggered for all other types of pipeline.
+# to be manually triggered for all other types of pipeline.
 # Using 'when: manual' needs 'allow failure: true' otherwise the overall pipeline status
 # is shown as 'blocked' and the stages show 'running' without ever appearing to finish.
 .manual-if-not-mr-rule: &manual-if-not-mr-rule
+  - if: $CI_COMMIT_BRANCH =~ /^mr[0-9]+/i || $CI_COMMIT_BRANCH =~ /^3356800/
+    when: on_success
   - if: $CI_PIPELINE_SOURCE != "merge_request_event"
     when: manual
     allow_failure: true
@@ -112,10 +114,12 @@ workflow:
   after_script:
     - pwd && echo "Top-level directories" && ls -tldr */
     - printf "Top 10 folders by size:\n" && du -m web/* | sort -n -r | head -n 10 || true
-    # Show the last two commits. Current directory /builds/project/scheduler ($CI_PROJECT_DIR) is correct.
+    # Show summary of the last two commits.
     - git show -2 --stat --oneline
     - |
       if [ $CI_PIPELINE_SOURCE == "merge_request_event" ]; then
+        # Show the last actual commit in detail (need to skip the merge commit).
+        cd $CI_PROJECT_DIR && git show -1 --skip=1
         BASELINE=${CI_MERGE_REQUEST_TARGET_BRANCH_SHA:-$CI_MERGE_REQUEST_DIFF_BASE_SHA}
         git diff --stat $BASELINE
         git diff $BASELINE -- .gitlab-ci.yml | head -n 30
@@ -228,7 +232,7 @@ eslint:
 phpstan:
   after_script:
     - echo -e "\e[0Ksection_start:`date +%s`:phpstan_summary[collapsed=true]\r\e[0K---PHPSTAN summary"
-    - pwd && ls -l phpstan* && test -f phpstan.neon && echo "=== This is phpstan.neon ===" && cat phpstan.neon
+    - pwd && ls -l phpstan* && test -f phpstan.neon && echo "=== This is phpstan.neon ===" && cat phpstan.neon && echo "==="
     - php $CI_PROJECT_DIR/scripts/phpstan-baseline-summary.php phpstan-baseline-to-fix.neon || true
     - echo -e "\e[0Ksection_end:`date +%s`:phpstan_summary\r\e[0K"
 
@@ -277,6 +281,7 @@ phpunit:
       printf "_PHPUNIT_CONCURRENT         = %s\n" $_PHPUNIT_CONCURRENT &&
       printf "_PHPUNIT_TESTGROUPS         = %s\n" "$_PHPUNIT_TESTGROUPS" &&
       printf "_PHPUNIT_EXTRA              = %s\n" "$_PHPUNIT_EXTRA" &&
+      printf "_CONCURRENCY_THREADS        = %s\n" "$_CONCURRENCY_THREADS" &&
       printf "SYMFONY_DEPRECATIONS_HELPER = %s\n" "$SYMFONY_DEPRECATIONS_HELPER"
     - |
       # @todo Delete this rm when https://www.drupal.org/project/scheduler/issues/3359998 is solved.
@@ -325,8 +330,7 @@ phpunit (next minor):
     - !reference [ .skip-phpunit-rule ]
     - *scheduler-testgroup-rule
   variables:
-    # Use core ignoreFile to show deprecations. This is only used when $_PHPUNIT_CONCURRENT=1 so make sure that is also set.
-    _PHPUNIT_CONCURRENT: 1
+    # Use core ignoreFile to show deprecations. This will only have an effect when $_PHPUNIT_CONCURRENT=1.
     SYMFONY_DEPRECATIONS_HELPER: "ignoreFile=$CI_PROJECT_DIR/$_WEB_ROOT/core/.deprecation-ignore.txt"
 
 phpunit (next major):
@@ -335,8 +339,7 @@ phpunit (next major):
     - !reference [ .skip-phpunit-rule ]
     - *scheduler-testgroup-rule
   variables:
-    # Use core ignoreFile to show deprecations. This is only used when $_PHPUNIT_CONCURRENT=1 so make sure that is also set.
-    _PHPUNIT_CONCURRENT: 1
+    # Use core ignoreFile to show deprecations. This will only have an effect when $_PHPUNIT_CONCURRENT=1.
     SYMFONY_DEPRECATIONS_HELPER: "ignoreFile=$CI_PROJECT_DIR/$_WEB_ROOT/core/.deprecation-ignore.txt"
 
 phpunit (drupal 9):
