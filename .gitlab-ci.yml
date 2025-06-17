@@ -300,6 +300,8 @@ phpunit:
           export _PHPUNIT_CONCURRENT=1
         fi
       fi
+    # Merge core's deprecation ignore file into the module's own file.
+    - cat $CI_PROJECT_DIR/$_WEB_ROOT/core/.deprecation-ignore.txt >> $DRUPAL_PROJECT_FOLDER/.deprecation-ignore.txt
     # Patch to disable strict config schema validation on older versions of core.
     # See https://www.drupal.org/project/scheduler/issues/3451750
     - vendor/bin/drush status | awk "NR==1{print \$4}" | grep -E '^(8.|9.|10.2)' && echo 'Core version is before 10.3, patching to remove strict config validation' && patch -p1 < tests/3451750-strict-config-schema.patch
@@ -331,7 +333,7 @@ phpunit (next minor):
     - *scheduler-testgroup-rule
   variables:
     # Use core ignoreFile to show deprecations. This will only have an effect when $_PHPUNIT_CONCURRENT=1.
-    SYMFONY_DEPRECATIONS_HELPER: "ignoreFile=$CI_PROJECT_DIR/$_WEB_ROOT/core/.deprecation-ignore.txt"
+    SYMFONY_DEPRECATIONS_HELPER: "ignoreFile=$DRUPAL_PROJECT_FOLDER/.deprecation-ignore.txt"
 
 phpunit (next major):
   rules:
@@ -340,7 +342,7 @@ phpunit (next major):
     - *scheduler-testgroup-rule
   variables:
     # Use core ignoreFile to show deprecations. This will only have an effect when $_PHPUNIT_CONCURRENT=1.
-    SYMFONY_DEPRECATIONS_HELPER: "ignoreFile=$CI_PROJECT_DIR/$_WEB_ROOT/core/.deprecation-ignore.txt"
+    SYMFONY_DEPRECATIONS_HELPER: "ignoreFile=$DRUPAL_PROJECT_FOLDER/.deprecation-ignore.txt"
 
 phpunit (drupal 9):
   extends: phpunit
