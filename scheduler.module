@@ -750,7 +750,7 @@ function _scheduler_translation_validate($form, FormStateInterface $form_state) 
     foreach ($content_types as $name => $options) {
       $enabled['publish_on'] = in_array($name, $publishing_enabled_types);
       $enabled['unpublish_on'] = in_array($name, $unpublishing_enabled_types);
-      if ($options['translatable'] && ($enabled['publish_on'] || $enabled['unpublish_on'])) {
+      if (isset($options['translatable']) && $options['translatable'] && ($enabled['publish_on'] || $enabled['unpublish_on'])) {
         $params = [
           '@entity' => $form['settings'][$entity_type]['#bundle_label'],
           '@type' => $form['settings'][$entity_type][$name]['settings']['#label'],
