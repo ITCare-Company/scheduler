@@ -98,17 +98,21 @@ workflow:
   if: '$OPT_IN_TEST_DRUPAL8 != "1"'
   when: never
 
-# Re-usable rule for running the job automatically on Merge Requests and allowing it
-# to be manually triggered for all other types of pipeline.
-# Using 'when: manual' needs 'allow failure: true' otherwise the overall pipeline status
-# is shown as 'blocked' and the stages show 'running' without ever appearing to finish.
-.manual-if-not-mr-rule: &manual-if-not-mr-rule
+# Re-usable rule for running the job automatically on Merge Requests. Also run
+# if the branch matches two specific criteria, even if not in a Merge Request.
+.run-in-mr-rule: &run-in-mr-rule
+  - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    when: on_success
   - if: $CI_COMMIT_BRANCH =~ /^mr[0-9]+/i || $CI_COMMIT_BRANCH =~ /^3356800/
     when: on_success
-  - if: $CI_PIPELINE_SOURCE != "merge_request_event"
-    when: manual
+
+# Run the job when committing to the real repo, otherwise manual. This is used in every variant except 'current'
+# and should be the last rule in the set because it ends without a condition.
+.run-on-commit-otherwise-manual-rule: &run-on-commit-otherwise-manual-rule
+  - if: $CI_PIPELINE_SOURCE == "push"
+    when: on_success
+  - when: manual
     allow_failure: true
-  - when: on_success
 
 .composer-base:
   after_script:
@@ -138,37 +142,34 @@ composer (max PHP version):
   rules:
     - !reference [ .opt-in-max-php-rule ]
     - !reference [ .check-max-php-version-rule ]
-    - when: manual
-      allow_failure: true
+    - *run-on-commit-otherwise-manual-rule
 
 composer (previous minor):
   rules:
     - !reference [ .opt-in-previous-minor-rule ]
-    - when: manual
-      allow_failure: true
+    - *run-on-commit-otherwise-manual-rule
 
 composer (previous major):
   rules:
     - !reference [ .opt-in-previous-major-rule ]
-    - when: manual
-      allow_failure: true
+    - *run-on-commit-otherwise-manual-rule
 
 composer (next minor):
   rules:
     - !reference [ .opt-in-next-minor-rule ]
-    - *manual-if-not-mr-rule
+    - *run-in-mr-rule
+    - *run-on-commit-otherwise-manual-rule
 
 composer (next major):
   rules:
     - !reference [ .opt-in-next-major-rule ]
-    - *manual-if-not-mr-rule
+    - *run-on-commit-otherwise-manual-rule
 
 composer (drupal 9):
   extends: .composer-base
   rules:
     - *opt-in-drupal9-rule
-    - when: manual
-      allow_failure: true
+    - *run-on-commit-otherwise-manual-rule
   variables:
     PHP_VERSION: 8.1
     DRUPAL_CORE: ^9.5
@@ -178,8 +179,7 @@ composer (drupal 8):
   extends: .composer-base
   rules:
     - *opt-in-drupal8-rule
-    - when: manual
-      allow_failure: true
+    - *run-on-commit-otherwise-manual-rule
   variables:
     PHP_VERSION: 7.4
     DRUPAL_CORE: ^8.9
