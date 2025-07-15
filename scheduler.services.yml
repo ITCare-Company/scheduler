@@ -11,6 +11,7 @@ services:
       - '@datetime.time'
       - '@entity_field.manager'
       - '@plugin.manager.scheduler'
+      - '@cache.default'
 
   logger.channel.scheduler:
     class: Drupal\Core\Logger\LoggerChannel

@@ -5,6 +5,7 @@ namespace Drupal\scheduler;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\EventDispatcher\Event;
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\FileStorage;
 use Drupal\Core\Datetime\DateFormatterInterface;
@@ -92,9 +93,25 @@ class SchedulerManager {
   private $pluginManager;
 
   /**
+   * The cache backend.
+   *
+   * @var \Drupal\Core\Cache\CacheBackendInterface
+   */
+  protected $cacheBackend;
+
+  /**
+   * A static cache of plugins.
+   *
+   * @var array
+   */
+  protected array $plugins = [];
+
+  /**
    * Constructs a SchedulerManager object.
    */
   public function __construct(
+    // Trailing comma is incompatible with PHPUnit 9.6.19 in Drupal 9.5 PHP 7.4.
+    // phpcs:disable Drupal.Functions.MultiLineFunctionDeclaration.MissingTrailingComma
     DateFormatterInterface $dateFormatter,
     LoggerInterface $logger,
     ModuleHandlerInterface $moduleHandler,
@@ -103,9 +120,8 @@ class SchedulerManager {
     EventDispatcherInterface $eventDispatcher,
     TimeInterface $time,
     EntityFieldManagerInterface $entityFieldManager,
-    // Trailing comma is incompatible with PHPUnit 9.6.19 in Drupal 9.5 PHP 7.4.
-    // phpcs:ignore Drupal.Functions.MultiLineFunctionDeclaration.MissingTrailingComma
-    SchedulerPluginManager $pluginManager
+    SchedulerPluginManager $pluginManager,
+    CacheBackendInterface $cacheBackend
   ) {
     $this->dateFormatter = $dateFormatter;
     $this->logger = $logger;
@@ -116,6 +132,7 @@ class SchedulerManager {
     $this->time = $time;
     $this->entityFieldManager = $entityFieldManager;
     $this->pluginManager = $pluginManager;
+    $this->cacheBackend = $cacheBackend;
   }
 
   /**
@@ -910,7 +927,7 @@ class SchedulerManager {
   /**
    * Gets instances of applicable Scheduler plugins for the enabled modules.
    *
-   * @param string $provider
+   * @param string|null $provider
    *   Optional. Filter the plugins to return only those that are provided by
    *   the named $provider module.
    *
@@ -918,30 +935,11 @@ class SchedulerManager {
    *   Array of plugin objects, keyed by the entity type the plugin supports.
    */
   public function getPlugins(?string $provider = NULL) {
-    $cache = \Drupal::cache()->get('scheduler.plugins');
-    if (!empty($cache) && !empty($cache->data) && empty($provider)) {
-      return $cache->data;
-    }
-
-    $definitions = $this->getPluginDefinitions();
-    $plugins = [];
-    foreach ($definitions as $definition) {
-      $plugin = $this->pluginManager->createInstance($definition['id']);
-      $dependency = $plugin->dependency();
-      // Ignore plugins if there is a dependency module and it is not enabled.
-      if ($dependency && !\Drupal::moduleHandler()->moduleExists($dependency)) {
-        continue;
-      }
-      // Ignore plugins that do not match the specified provider module name.
-      if ($provider && $definition['provider'] != $provider) {
-        continue;
-      }
-      $plugins[$plugin->entityType()] = $plugin;
-    }
-
-    // Save to the cache only when not filtered for a particular a provider.
-    if (empty($provider)) {
-      \Drupal::cache()->set('scheduler.plugins', $plugins);
+    $plugins = $this->doGetPlugins();
+    if ($provider) {
+      $plugins = array_filter($plugins, function ($plugin) use ($provider) {
+        return $plugin->getPluginDefinition()['provider'] === $provider;
+      });
     }
     return $plugins;
   }
@@ -950,7 +948,8 @@ class SchedulerManager {
    * Reset the scheduler plugins cache.
    */
   public function invalidatePluginCache() {
-    \Drupal::cache()->invalidate('scheduler.plugins');
+    $this->plugins = [];
+    $this->cacheBackend->invalidate('scheduler.plugins');
   }
 
   /**
@@ -1440,6 +1439,38 @@ class SchedulerManager {
       ]);
     }
     return $output;
+  }
+
+  /**
+   * Gets instances of applicable Scheduler plugins for the enabled modules.
+   *
+   * @return \Drupal\Component\Plugin\PluginInspectionInterface[]
+   *   Array of plugin objects, keyed by the entity type the plugin supports.
+   */
+  protected function doGetPlugins(): array {
+    if (!empty($this->plugins)) {
+      return $this->plugins;
+    }
+
+    $cache = $this->cacheBackend->get('scheduler.plugins');
+    if (!empty($cache) && !empty($cache->data)) {
+      $this->plugins = $cache->data;
+      return $this->plugins;
+    }
+
+    $definitions = $this->getPluginDefinitions();
+    foreach ($definitions as $definition) {
+      $plugin = $this->pluginManager->createInstance($definition['id']);
+      $dependency = $plugin->dependency();
+      // Ignore plugins if there is a dependency module and it is not enabled.
+      if ($dependency && !$this->moduleHandler->moduleExists($dependency)) {
+        continue;
+      }
+      $this->plugins[$plugin->entityType()] = $plugin;
+    }
+    $this->cacheBackend->set('scheduler.plugins', $this->plugins);
+
+    return $this->plugins;
   }
 
 }
