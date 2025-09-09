@@ -5,12 +5,15 @@ namespace Drupal\Tests\scheduler_rules_integration\Functional;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\Tests\scheduler\Functional\SchedulerBrowserTestBase;
 use Drupal\rules\Context\ContextConfig;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the six actions that Scheduler provides for use in Rules module.
  *
  * @group scheduler_rules_integration
  */
+#[Group('scheduler_rules_integration')]
 class SchedulerRulesActionsTest extends SchedulerBrowserTestBase {
 
   /**
@@ -52,6 +55,7 @@ class SchedulerRulesActionsTest extends SchedulerBrowserTestBase {
    *
    * @dataProvider dataStandardEntityTypes
    */
+  #[DataProvider('dataStandardEntityTypes')]
   public function testPublishOnActions($entityTypeId, $enabledBundle) {
     $nonEnabledBundle = $this->entityTypeObject($entityTypeId, 'non-enabled')->id();
     $titleField = $this->titleField($entityTypeId);
@@ -247,6 +251,7 @@ class SchedulerRulesActionsTest extends SchedulerBrowserTestBase {
    *
    * @dataProvider dataStandardEntityTypes
    */
+  #[DataProvider('dataStandardEntityTypes')]
   public function testUnpublishOnActions($entityTypeId, $enabledBundle) {
     $nonEnabledBundle = $this->entityTypeObject($entityTypeId, 'non-enabled')->id();
     $titleField = $this->titleField($entityTypeId);

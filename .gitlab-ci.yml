@@ -29,6 +29,7 @@ variables:
   _PHPUNIT_TESTGROUPS: ''
   _CSPELL_EXTRA: '--dot'
   _ALL_VALIDATE_ALLOW_FAILURE: 0
+  PHPUNIT_FAIL_ON_PHPUNIT_DEPRECATION: 0
 
 ################
 # Job overrides
@@ -236,6 +237,11 @@ phpstan:
     - php $CI_PROJECT_DIR/scripts/phpstan-baseline-summary.php phpstan-baseline-to-fix.neon || true
     - echo -e "\e[0Ksection_end:`date +%s`:phpstan_summary\r\e[0K"
 
+phpstan (previous major):
+  # Temporarily skip this job.
+  rules:
+    - when: never
+
 # -------------------------------- TEST ----------------------------------------
 
 .scheduler-testgroup-rule: &scheduler-testgroup-rule
@@ -313,6 +319,9 @@ phpunit (max PHP version):
     - !reference [ .skip-phpunit-rule ]
     - !reference [ .check-max-php-version-rule ]
     - *scheduler-testgroup-rule
+  variables:
+    # Use the project ignoreFile to show the other deprecations. This will only have an effect when $_PHPUNIT_CONCURRENT=1.
+    SYMFONY_DEPRECATIONS_HELPER: "ignoreFile=$DRUPAL_PROJECT_FOLDER/.deprecation-ignore.txt"
 
 phpunit (previous minor):
   rules:

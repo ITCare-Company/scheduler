@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\scheduler\Functional;
 
+use PHPUnit\Framework\Attributes\Group;
+
 /**
  * Tests the admin settings page of Scheduler.
  *
@@ -11,6 +13,7 @@ namespace Drupal\Tests\scheduler\Functional;
  *
  * @group scheduler
  */
+#[Group('scheduler')]
 class SchedulerAdminSettingsTest extends SchedulerBrowserTestBase {
 
   /**

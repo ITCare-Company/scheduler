@@ -2,11 +2,15 @@
 
 namespace Drupal\Tests\scheduler\FunctionalJavascript;
 
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+
 /**
  * Tests the JavaScript functionality for default dates.
  *
  * @group scheduler_js
  */
+#[Group('scheduler_js')]
 class SchedulerJavascriptDefaultTimeTest extends SchedulerJavascriptTestBase {
 
   /**
@@ -55,6 +59,7 @@ class SchedulerJavascriptDefaultTimeTest extends SchedulerJavascriptTestBase {
    *
    * @dataProvider dataTimeWhenSchedulingIsRequired
    */
+  #[DataProvider('dataTimeWhenSchedulingIsRequired')]
   public function testTimeWhenSchedulingIsRequired($entityTypeId, $bundle, $field) {
     $config = $this->config('scheduler.settings');
     $titleField = $this->titleField($entityTypeId);
