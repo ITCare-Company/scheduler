@@ -39,7 +39,7 @@ workflow:
   rules:
     - !reference [ .default-workflow ]
     # Also run if the branch starts with 'mr' followed by digits or is the specific issue branch 3356800.
-    - if: $CI_COMMIT_BRANCH =~ /^mr[0-9]+/i || $CI_COMMIT_BRANCH =~ /^3356800/
+    - if: $CI_COMMIT_BRANCH =~ /^mr[0-9]+/i || ($CI_COMMIT_BRANCH =~ /^3356800/ && $CI_PIPELINE_SOURCE != "merge_request_event")
 
 .show-variables: &show-variables
   - |
@@ -263,6 +263,10 @@ phpstan (previous major):
     allow_failure: true
   - when: on_success
 
+.merge-core-deprecation-file: &merge-core-deprecation-file
+  # Merge core's deprecation ignore file into the module's own file. Make sure the core file exists (for older Drupal versions)
+  - touch $CI_PROJECT_DIR/$_WEB_ROOT/core/.deprecation-ignore.txt && cat $CI_PROJECT_DIR/$_WEB_ROOT/core/.deprecation-ignore.txt >> $DRUPAL_PROJECT_FOLDER/.deprecation-ignore.txt
+
 phpunit:
   parallel:
     matrix:
@@ -283,12 +287,13 @@ phpunit:
     # If any variation also needs a before_script then add - !reference [phpunit, before_script] to include this script.
     - *show-variables
     - |
-      printf "_MATRIX_VALUE               = %s\n" $_MATRIX_VALUE &&
-      printf "_PHPUNIT_CONCURRENT         = %s\n" $_PHPUNIT_CONCURRENT &&
-      printf "_PHPUNIT_TESTGROUPS         = %s\n" "$_PHPUNIT_TESTGROUPS" &&
-      printf "_PHPUNIT_EXTRA              = %s\n" "$_PHPUNIT_EXTRA" &&
-      printf "_CONCURRENCY_THREADS        = %s\n" "$_CONCURRENCY_THREADS" &&
-      printf "SYMFONY_DEPRECATIONS_HELPER = %s\n" "$SYMFONY_DEPRECATIONS_HELPER"
+      printf "_MATRIX_VALUE                       = %s\n" $_MATRIX_VALUE &&
+      printf "_PHPUNIT_CONCURRENT                 = %s\n" $_PHPUNIT_CONCURRENT &&
+      printf "_PHPUNIT_TESTGROUPS                 = %s\n" "$_PHPUNIT_TESTGROUPS" &&
+      printf "_PHPUNIT_EXTRA                      = %s\n" "$_PHPUNIT_EXTRA" &&
+      printf "_CONCURRENCY_THREADS                = %s\n" "$_CONCURRENCY_THREADS" &&
+      printf "SYMFONY_DEPRECATIONS_HELPER         = %s\n" "$SYMFONY_DEPRECATIONS_HELPER" &&
+      printf "PHPUNIT_FAIL_ON_PHPUNIT_DEPRECATION = %s\n" "$PHPUNIT_FAIL_ON_PHPUNIT_DEPRECATION"
     - |
       # @todo Delete this rm when https://www.drupal.org/project/scheduler/issues/3359998 is solved.
       if [[ $_PHPUNIT_TESTGROUPS == "--all" ]]; then
@@ -306,8 +311,7 @@ phpunit:
           export _PHPUNIT_CONCURRENT=1
         fi
       fi
-    # Merge core's deprecation ignore file into the module's own file. Make sure the file exists (for older core versions)
-    - touch $CI_PROJECT_DIR/$_WEB_ROOT/core/.deprecation-ignore.txt && cat $CI_PROJECT_DIR/$_WEB_ROOT/core/.deprecation-ignore.txt >> $DRUPAL_PROJECT_FOLDER/.deprecation-ignore.txt
+    - *merge-core-deprecation-file
     # Patch to disable strict config schema validation on older versions of core.
     # See https://www.drupal.org/project/scheduler/issues/3451750
     - vendor/bin/drush status | awk "NR==1{print \$4}" | grep -E '^(8.|9.|10.2)' && echo 'Core version is before 10.3, patching to remove strict config validation' && patch -p1 < tests/3451750-strict-config-schema.patch
@@ -371,8 +375,19 @@ phpunit (drupal 8):
   needs: [composer (drupal 8)]
 
 test-only changes:
-  # Remove the parallel definition that is defined in the customized phpunit.
+  # Remove the parallel definition that is defined in the customized phpunit job.
   parallel:
+  before_script:
+    # Do not need the matrix value manipulation here.
+    - |
+      printf "_PHPUNIT_CONCURRENT                 = %s\n" $_PHPUNIT_CONCURRENT &&
+      printf "_CONCURRENCY_THREADS                = %s\n" "$_CONCURRENCY_THREADS" &&
+      printf "SYMFONY_DEPRECATIONS_HELPER         = %s\n" "$SYMFONY_DEPRECATIONS_HELPER" &&
+      printf "PHPUNIT_FAIL_ON_PHPUNIT_DEPRECATION = %s\n" "$PHPUNIT_FAIL_ON_PHPUNIT_DEPRECATION"
+    - *show-variables
+    - *merge-core-deprecation-file
+    # Add .deprecation-ignore.txt to the file pattern to be preserved. Include | if there is already a value for the pattern.
+    - _TEST_ONLY_FILE_PATTERN="${_TEST_ONLY_FILE_PATTERN:+$_TEST_ONLY_FILE_PATTERN|}\.deprecation\-ignore\.txt"
 
 upgrade status:
   rules:
