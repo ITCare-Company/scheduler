@@ -949,7 +949,8 @@ class SchedulerManager {
    */
   public function invalidatePluginCache() {
     $this->plugins = [];
-    $this->cacheBackend->invalidate('scheduler.plugins');
+    $this->cacheBackend->delete('scheduler.entity_form_ids');
+    $this->cacheBackend->delete('scheduler.entity_type_form_ids');
   }
 
   /**
@@ -1013,11 +1014,18 @@ class SchedulerManager {
    *   List of entity add/edit form IDs for all registered scheduler plugins.
    */
   public function getEntityFormIds() {
+    $cache = $this->cacheBackend->get('scheduler.entity_form_ids');
+    if ($cache) {
+      return $cache->data;
+    }
+
     $plugins = $this->getPlugins();
     $form_ids = [];
     foreach ($plugins as $plugin) {
       $form_ids = array_merge($form_ids, $plugin->entityFormIDs());
     }
+
+    $this->cacheBackend->set('scheduler.entity_form_ids', $form_ids, Cache::PERMANENT, ['entity_bundles']);
     return $form_ids;
   }
 
@@ -1028,11 +1036,16 @@ class SchedulerManager {
    *   List of entity type add/edit form IDs for registered scheduler plugins.
    */
   public function getEntityTypeFormIds() {
+    $cache = $this->cacheBackend->get('scheduler.entity_type_form_ids');
+    if ($cache) {
+      return $cache->data;
+    }
     $plugins = $this->getPlugins();
     $form_ids = [];
     foreach ($plugins as $plugin) {
       $form_ids = array_merge($form_ids, $plugin->entityTypeFormIDs());
     }
+    $this->cacheBackend->set('scheduler.entity_type_form_ids', $form_ids, Cache::PERMANENT, ['entity_bundles']);
     return $form_ids;
   }
 
@@ -1452,12 +1465,6 @@ class SchedulerManager {
       return $this->plugins;
     }
 
-    $cache = $this->cacheBackend->get('scheduler.plugins');
-    if (!empty($cache) && !empty($cache->data)) {
-      $this->plugins = $cache->data;
-      return $this->plugins;
-    }
-
     $definitions = $this->getPluginDefinitions();
     foreach ($definitions as $definition) {
       $plugin = $this->pluginManager->createInstance($definition['id']);
@@ -1468,7 +1475,6 @@ class SchedulerManager {
       }
       $this->plugins[$plugin->entityType()] = $plugin;
     }
-    $this->cacheBackend->set('scheduler.plugins', $this->plugins);
 
     return $this->plugins;
   }
