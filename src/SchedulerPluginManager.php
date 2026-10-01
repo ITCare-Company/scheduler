@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\scheduler\Annotation\SchedulerPlugin;
+use Drupal\scheduler\Attribute\SchedulerPlugin as SchedulerPluginAttribute;
 
 /**
  * Provides a Scheduler Plugin Manager.
@@ -42,6 +43,7 @@ class SchedulerPluginManager extends DefaultPluginManager {
       $namespaces,
       $module_handler,
       $plugin_interface,
+      SchedulerPluginAttribute::class,
       $plugin_definition_annotation_name
     );
 
